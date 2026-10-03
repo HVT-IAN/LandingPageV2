@@ -1,0 +1,23 @@
+@media (max-width: 768px) {
+    .FuenteTitulos {
+        font-size: 30px;
+        margin-bottom: -20px;
+    }
+
+    .subtituloTitulo {
+        font-size: 10px;
+    }
+
+    #menuOpciones ul {
+        font-size: 13px;
+
+    }
+
+    .margenIzquierdo,
+    .margenDerecho,
+    .margenSuperior,
+    .margenInferior {
+        width: var(--margenMovil);
+    }
+
+}

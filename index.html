@@ -4,59 +4,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DEV-BLOG</title>
+    <title>Ian Oscani — Portafolio</title>
+    <meta name="description"
+        content="Estudiante de ingenieria en software. Diseno de interfaces, experiencias visuales y desarrollo web.">
+
+    <!-- Open Graph: controla como se ve el enlace al compartirlo en redes.
+         Falta og:image porque necesita una URL absoluta, que depende de donde
+         se publique el sitio. -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Ian Oscani — Portafolio">
+    <meta property="og:description"
+        content="Estudiante de ingenieria en software. Diseno de interfaces, experiencias visuales y desarrollo web.">
+
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
     <link rel="stylesheet" href="Css/style.css">
     <link rel="stylesheet" href="Css/visuales.css">
     <link rel="stylesheet" href="Css/root.css">
-    <link rel="stylesheet" href="Css/querysMovil.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Solo las familias y pesos que el CSS usa de verdad: Poppins 500/700 y
+         Montserrat 300/500. Se quitaron Jost, Lato y Poiret One (no aparecen en
+         ningun font-family) y los pesos que no se usan. -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700&family=Jost:wght@100;200;300;400;500;600;700&family=Lato:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Poiret+One:wght@400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Poppins:wght@500;700&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="Css/three.css">
+    <!-- Va el ultimo a proposito: los media query tienen que ganar a cualquier
+         regla que se declare despues en los otros CSS. -->
+    <link rel="stylesheet" href="Css/querysMovil.css">
 </head>
-<link rel="stylesheet" href="Css/camara.css">
-
 
 <body>
-    <div class="fondo"></div>
-    <div id="escena">
-        <div id="camara">
-            <div class="fondoSeccion activo" id="fondo-inicio"></div>
-            <div class="fondoSeccion" id="fondo-proyectos"></div>
-            <div class="fondoSeccion" id="fondo-informacion"></div>
-        </div>
-    </div>
-    <div id="barrido"><span></span><span></span><span></span></div>
-    <div id="particles-js"></div>
-    <div class="contenedorTitulo">
+    <canvas id="escena3d"></canvas>
+    <!-- Retícula viva. El div es lo que faltaba: el CSS y el JS que la dibujan
+         ya existian, pero sin este contenedor no se creaba ningun span. -->
+    <div class="gridOndas"></div>
+    <header class="cabecera" id="inicio">
         <h1 class="FuenteTitulos"><a href="#inicio" style="text-decoration: none;">IAN OSCANI</a></h1>
         <h3 class="subtituloTitulo">Estudiante de ingenieria en software</h3>
-    </div>
-    <div class="iconosContacto">
-        <a href="https://www.instagram.com/hvtkndr_ian/">
-            <img src="https://cdn.svglogos.dev/logos/instagram-icon.svg" width="40" height="40">
-        </a>
-        <a href="https://github.com/HVT-IAN">
-            <img src="https://cdn.svglogos.dev/logos/github-icon.svg" width="40" height="40">
-        </a>
-    </div>
-    <span class="lineaHorizontal"></span>
-    <span class="leyendaHorizontal">REDES SOCIALES</span>
-    <div class="menuPrincipal active">
-        <nav id="menuOpciones">
-            <ul>
-                <li>
-                    <a href="#panel-proyectos" style="text-decoration: none;"
-                        class="barraLlenado rotacion1">PROYECTOS</a>
-                </li>
-                <li>
-                    <a href="#panel-informacion" style="text-decoration: none;"
-                        class="barraLlenado rotacion2">INFORMACION</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+        <div class="iconosContacto">
+            <a href="https://www.instagram.com/hvtkndr_ian/">
+                <img src="https://cdn.svglogos.dev/logos/instagram-icon.svg" alt="Instagram" width="40" height="40">
+            </a>
+            <a href="https://github.com/HVT-IAN">
+                <img src="https://cdn.svglogos.dev/logos/github-icon.svg" alt="GitHub" width="40" height="40">
+            </a>
+        </div>
+        <span class="lineaHorizontal"></span>
+        <span class="leyendaHorizontal">REDES SOCIALES</span>
+        <div class="menuPrincipal">
+            <nav id="menuOpciones">
+                <ul>
+                    <li>
+                        <a href="#panel-proyectos" style="text-decoration: none;"
+                            class="barraLlenado rotacion1">PROYECTOS</a>
+                    </li>
+                    <li>
+                        <a href="#panel-informacion" style="text-decoration: none;"
+                            class="barraLlenado rotacion2">INFORMACION</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
     <main>
         <div class="contenedor-margenes">
             <div class="margenSuperior"></div>
@@ -86,15 +97,15 @@
                 </div>
                 <div class="proyectosDetalles">
                     <img id="detalle-imagen">
-                    <h2 id="detalle-titulo" class="detallesProyectos">DECO-ONE</h2>
-                    <p id="detalle-descripcion" class="descripcionProyectos">
+                    <h2 id="detalle-titulo">DECO-ONE</h2>
+                    <p id="detalle-descripcion">
                         asdasdasdasdasdasdasdasdasdasdadasdasdasdasdasdasddadsasd
                         adsasdasdasdasdasdasdddddddddddddddddddddddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddasdasdasdasdasdasdads
                     </p>
                 </div>
             </div>
         </section>
-        <h1 class="fuenteTituloSeccion">PROYECTOS</h1>
+        <h2 class="fuenteTituloSeccion">PROYECTOS</h2>
 
         <section id="panel-informacion">
             <div class="contenedor-informacion">
@@ -111,17 +122,21 @@
                     me encuentro explorando el mundo del desarrollo web, me gusta aprender nuevas tecnologias y
                     aplicarlas
                     en mis proyectos.</p>
-                <img src="imagen.jpg" alt="foto mia" width="500" height="500">
+                <img src="img/placeholder-foto.svg" alt="Espacio reservado para la foto" width="200" height="200">
             </div>
         </section>
-        <h1 class="fuenteTituloSeccion2">INFO</h1>
+        <h2 class="fuenteTituloSeccion2">INFO</h2>
 
     </main>
+
     <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="JavaScript/camara.js"></script>
+    <!-- Tres.js r128. Ya no hace falta GSAP: el morph y el dolly los lleva el
+         scroll con interpolacion propia, y en los scripts no queda ninguna
+         referencia a gsap. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="JavaScript/three.js"></script>
     <script src="JavaScript/script.js"></script>
+
 </body>
 
 </html>

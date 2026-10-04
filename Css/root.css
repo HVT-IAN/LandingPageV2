@@ -2,4 +2,16 @@
     --margen: 40px;
     --margenMovil: 20px;
     --colorMargen: transparent;
+
+    /* Hueco que se deja entre secciones para que el morph tenga sitio.
+       No es un numero arbitrario. La banda de morph mide (1 - 2*meseta) del tramo
+       entre keyframes, y con las tres etapas midiendo 100vh el tramo es
+       (100 + hueco). Para que la banda quepa ENTERA dentro del hueco, y sobre
+       todo para que termine antes de que la seccion siguiente entre en pantalla,
+       hace falta:
+           0.5 + (1 - meseta) * (1 + hueco) <= 1 + hueco
+       que con meseta 0.30 da hueco >= 67vh. Con 80vh la banda acaba 32px antes de
+       que aparezca la seccion (en una pantalla de 800px), que es lo que hace que
+       al entrar ya se vea la figura formada y no a medio hacer. */
+    --altoTransicion: 80vh;
 }

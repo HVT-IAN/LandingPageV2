@@ -1,16 +1,52 @@
-#particles-js {
-    position: fixed;
-    inset: 0;
-    z-index: -999;
-    background-color: #3a3a3a;
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background-color: #ffffff;
+    background-image: radial-gradient(circle, #000000 0.5px, transparent 0.6px);
+    background-size: 7px 7px;
+    background-attachment: fixed;
 }
 
+/* Con scroll nativo las secciones ya no se ocultan entre si: cada una ocupa
+   una pantalla y va apareciendo segun bajas. .active ya no decide si algo se ve,
+   solo dispara la animacion de entrada de la que este en pantalla.
+
+   flow-root para que los margenes de los hijos no se escapen. El <p> de la
+   descripcion de proyecto colapsaba su margin-bottom hacia fuera y empujaba la
+   seccion siguiente 23px, con lo que las cajas no emballen en el alto exacto que
+   miden los keyframes del fondo 3D y el hueco salia de 80vh + 23.
+
+   min-height y no svh a proposito: svh cambia de alto al contraerse la barra de
+   URL del movil, y los keyframes del fondo 3D se miden contra estas alturas, asi
+   que con svh la figura se moveria sola al scrollear. */
 section {
-    display: none;
+    display: flow-root;
+    min-height: 100vh;
+}
+
+/* Hueco entre secciones. Sin esto el morph no cabe: las secciones estaban pegadas
+   y el tramo entre keyframes media 823px, con lo que la banda de morph (329px)
+   se colaba 153px dentro de la seccion siguiente y la figura llegaba a formarse
+   cuando ya ibas por la mitad. separating las etapas el tramo pasa a 180vh y la
+   banda cabe entera en el hueco.
+
+   Solo la primera seccion de cada padre; la ultima ya tiene la holgura del
+   padding-bottom de <main>. */
+.cabecera,
+main section:not(:last-of-type) {
+    margin-bottom: var(--altoTransicion);
+}
+
+/* Holgura al final de la pagina. Sin ella la ultima seccion nunca puede
+   quedar centrada (el scroll topa antes), y ademas el keyframe 3 del fondo 3D
+   queda justo en el tope del recorrido, sin sitio para quedarse quieto con la
+   figura ya completa. */
+main {
+    padding-bottom: 75vh;
 }
 
 section.active {
-    display: block;
     animation: slideEntrada 1.2s ease-in-out;
 }
 
@@ -26,11 +62,23 @@ section.active {
     }
 }
 
-.menuPrincipal {
-    display: none;
+/* La portada es una etapa del recorrido igual que las secciones: el fondo 3D toma
+   su centro como primer keyframe, asi que tiene que medir exactamente una
+   pantalla. El min-height va aqui y no en .menuPrincipal porque .menuPrincipal es
+   el ultimo elemento en flujo y el min-height se le SUMABA a los 302px del titulo
+   y el subtitulo, dejando la portada en 1.38 pantallas en vez de una. Con las tres
+   etapas desiguales los dos tramos entre keyframes median 1502px y 823px, y por
+   eso la banda del segundo tramo no cabia antes de la seccion.
+
+   flow-root para que el margin-top del h1 no colapse hacia fuera. */
+.cabecera {
+    display: flow-root;
+    min-height: 100vh;
 }
 
-.menuPrincipal.active {
+/* El menu esta siempre en el flujo. Su alto lo pone ahora la cabecera, que lo
+   envuelve. */
+.menuPrincipal {
     display: block;
 }
 
@@ -41,7 +89,7 @@ a {
 .FuenteTitulos {
     font-family: "Poppins", sans-serif;
     margin: 70px;
-    margin-bottom: -30px;
+    margin-bottom: -40px;
     font-size: 102px;
     font-weight: 700;
     transition: 0.5s ease;
@@ -91,7 +139,7 @@ a {
     cursor: pointer;
     font-family: "Montserrat", sans-serif;
     font-size: 30px;
-    font-weight: Medium;
+    font-weight: 500;
     color: rgb(0, 0, 0);
     margin-top: 20px;
     transition: 0.2s ease;
@@ -126,10 +174,22 @@ a {
     height: 25px;
 }
 
+/* Los dos titulos fantasma se quedan fijos y con su animacion de entrada, pero
+   pasan por DETRAS del texto de la seccion en vez de encima: z-index -1 los saca
+   de la capa de posicionadas y los mete en la de negativos, que se pinta despues
+   del fondo de la pagina pero antes de los bloques y del texto. Como los
+   contenedores de contenido no tienen fondo, la palabra se sigue viendo; lo que
+   deja de pasar es que las aristas del Poppins 152px se crucen con los glifos
+   del parrafo.
+
+   No tapa al canvas: #escena3d tambien esta en z-index -1, pero el canvas es el
+   primer elemento del body y estos titulos van despues, asi que en el mismo
+   z-index gana el que viene mas tarde en el DOM. */
 .fuenteTituloSeccion {
     position: fixed;
     left: 43%;
     bottom: 60%;
+    z-index: -1;
     font-size: 152px;
     font-family: "Poppins", sans-serif;
     font-weight: bold;
@@ -141,6 +201,7 @@ a {
     position: fixed;
     bottom: 5%;
     left: 82%;
+    z-index: -1;
     font-size: 152px;
     font-family: "Poppins", sans-serif;
     font-weight: bold;
@@ -151,6 +212,7 @@ a {
 .fuenteTituloSeccion,
 .fuenteTituloSeccion2 {
     display: none;
+    margin-bottom: 100px;
 }
 
 #panel-proyectos.active~.fuenteTituloSeccion {
@@ -173,5 +235,21 @@ a {
     to {
         opacity: 1;
         transform: rotate(-90deg) translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .gridOndas {
+        display: none;
     }
 }

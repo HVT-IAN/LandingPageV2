@@ -1,7 +1,4 @@
-const menuPrincipal = document.querySelector(".menuPrincipal");
-const links = document.querySelectorAll("nav a");
-
-// --- Inicialización de Lenis ---
+// --- Scroll suave ---
 const lenis = new Lenis();
 function raf(time) {
     lenis.raf(time);
@@ -9,127 +6,95 @@ function raf(time) {
 }
 requestAnimationFrame(raf);
 
-// --- Inicialización de Particles.js ---
-particlesJS("particles-js", {
-    "particles": {
-        "number": { "value": 190, "density": { "enable": true, "value_area": 900 } },
-        "color": { "value": "#ffffff" },
-        "shape": { "type": "polygon", "polygon": { "nb_sides": { "value": 5, "random": true, "minimum": 3 } } },
-        "opacity": { "value": 0.3, "random": true },
-        "size": { "value": 2, "random": true },
-        "line_linked": { "enable": true, "distance": 50, "opacity": 0.2 },
-        "move": { "enable": true, "speed": 0.4, "direction": "bottom-right", "random": true }
-    },
-    "interactivity": { "events": { "onhover": { "enable": true, "mode": "push", "resize": true, "modes": { "push": { "distance": 400, "duration": 0.4 } } } } },
-    "retina_detect": true
-});
+// --- Secciones en pantalla ---
+// .active deja de significar "la seccion que elegiste en el menu" y pasa a
+// significar "esta seccion esta en pantalla". Las reglas CSS que cuelgan de esa
+// clase (los titulos fantasma PROYECTOS/INFO, la animacion de entrada) siguen
+// igual sin tocar nada.
+const secciones = [...document.querySelectorAll("main section")];
+const proporcionEnPantalla = new Map();
 
-function cambiarEscenario(hash) {
-    moverCamara(hash);
-    // Ya no hacemos nada aquí, ya que quitamos los efectos
-}
+const observador = new IntersectionObserver((entradas) => {
+    for (const e of entradas) {
+        proporcionEnPantalla.set(e.target, e.intersectionRatio);
+    }
 
-function mostrarSeccion(hash) {
-    // ... lógica originalsssss
-    if (hash === "#inicio" || hash === "") {
-        menuPrincipal.classList.add("active");
-        const seccionActiva = document.querySelector("section.active");
-        if (seccionActiva) {
-            seccionActiva.classList.remove("active");
+    // Dos secciones se pisan un rato en el borde. Sin quedarse con la de mayor
+    // proporcion, aparecerian los dos titulos fantasma a la vez.
+    let mejor = null;
+    let mejorProporcion = 0;
+    for (const [el, proporcion] of proporcionEnPantalla) {
+        if (proporcion > mejorProporcion) {
+            mejorProporcion = proporcion;
+            mejor = el;
         }
-        links.forEach(l => l.classList.remove("active"));
-        cambiarEscenario("#inicio"); // Añadimos esto
-        return;
     }
 
-    const seccion = document.querySelector(hash);
-    if (!seccion) return;
-
-    const seccionActiva = document.querySelector("section.active");
-    if (seccionActiva) {
-        seccionActiva.classList.remove("active");
+    for (const s of secciones) {
+        s.classList.toggle("active", s === mejor);
     }
-    seccion.classList.add("active");
-    menuPrincipal.classList.remove("active");
+}, { threshold: [0, 0.25, 0.5, 0.75, 1] });
 
-    links.forEach(l => l.classList.remove("active"));
-    const linkCorrespondiente = document.querySelector(`nav a[href="${hash}"]`);
-    if (linkCorrespondiente) {
-        linkCorrespondiente.classList.add("active");
-    }
+for (const s of secciones) observador.observe(s);
 
-    cambiarEscenario(hash); // Añadimos esto
-}
+// Los href siguen siendo anclas de verdad (cursor de enlace, abrir en pestana
+// nueva), pero el desplazamiento lo lleva Lenis para que sea suave y no un
+// salto. Lenis escribe el scrollTop real, no un transform, asi que three.js
+// sigue leyendo window.scrollY sin necesidad de acoplarse a el.
+document.querySelectorAll('a[href^="#"]').forEach((enlace) => {
+    enlace.addEventListener("click", (evento) => {
+        const destino = enlace.getAttribute("href");
+        if (!destino || destino === "#") return;
 
-window.addEventListener("hashchange", function () {
-    mostrarSeccion(window.location.hash);
+        evento.preventDefault();
+
+        if (destino === "#inicio") {
+            lenis.scrollTo(0, { duration: 1.4 });
+            return;
+        }
+
+        const seccion = document.querySelector(destino);
+        if (seccion) lenis.scrollTo(seccion, { duration: 1.4 });
+    });
 });
 
-window.addEventListener("DOMContentLoaded", function () {
-    mostrarSeccion(window.location.hash);
-});
 document.querySelectorAll(".botonProyectos").forEach(function (boton) {
     boton.addEventListener("click", function () {
         document.querySelectorAll(".botonProyectos").forEach(b => b.classList.remove("active"));
         boton.classList.add("active");
-
-        document.getElementById("detalle-titulo").textContent = boton.dataset.titulo;
-        document.getElementById("detalle-fecha").textContent = boton.dataset.fecha;
-        document.getElementById("detalle-descripcion").textContent = boton.dataset.descripcion;
+        const titulo = document.getElementById("detalle-titulo");
+        const descripcion = document.getElementById("detalle-descripcion");
+        if (titulo) titulo.textContent = boton.dataset.titulo || "";
+        if (descripcion) descripcion.textContent = boton.dataset.descripcion || "";
     });
 });
 
-const contenedor = document.querySelector(".gridOndas");
-const filas = 15;
-const columnas = 30;
-const puntos = [];
+// --- Retícula viva ---
+// Las columnas no se fijan aqui: se leen del estilo computado del contenedor,
+// que es donde querysMovil.css decide cuantas hay (30 / 16 / 10 / 8 segun el
+// ancho). Por eso hay que repintar en cada resize.
+const contenedorOndas = document.querySelector(".gridOndas");
 
-for (let fila = 0; fila < filas; fila++) {
-    for (let columna = 0; columna < columnas; columna++) {
-        const punto = document.createElement("span");
-        contenedor.appendChild(punto);
-        puntos.push(punto);
+function pintarOndas() {
+    if (!contenedorOndas) return;
+
+    const columnas = getComputedStyle(contenedorOndas)
+        .gridTemplateColumns
+        .split(" ")
+        .filter(Boolean)
+        .length;
+
+    const necesarias = columnas * 15;
+
+    if (contenedorOndas.childElementCount === necesarias) return;
+
+    contenedorOndas.textContent = "";
+    const fragmento = document.createDocumentFragment();
+    for (let i = 0; i < necesarias; i++) {
+        fragmento.appendChild(document.createElement("span"));
     }
+    contenedorOndas.appendChild(fragmento);
 }
 
-// Guardamos la posición real de cada punto UNA sola vez
-function guardarPosiciones() {
-    puntos.forEach(function (p) {
-        const rect = p.getBoundingClientRect();
-        p.datosX = rect.left + rect.width / 2;
-        p.datosY = rect.top + rect.height / 2;
-    });
-}
-window.addEventListener("load", guardarPosiciones);
-window.addEventListener("resize", guardarPosiciones);
-
-// Seguimos la posición del mouse
-let mouseX = -9999;
-let mouseY = -9999;
-document.addEventListener("mousemove", function (e) {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-});
-
-// El bucle de animación: se ejecuta ~60 veces por segundo
-function animar() {
-    puntos.forEach(function (p) {
-        const dx = mouseX - p.datosX;
-        const dy = mouseY - p.datosY;
-        const distancia = Math.sqrt(dx * dx + dy * dy);
-        const radioReaccion = 400;
-
-        if (distancia < radioReaccion) {
-            const intensidad = 1 - (distancia / radioReaccion);
-            p.style.opacity = 0.15 + intensidad * 0.85;
-            p.style.transform = "scale(" + (1 + intensidad * 3) + ")";
-        } else {
-            p.style.opacity = "";
-            p.style.transform = "";
-        }
-    });
-    requestAnimationFrame(animar);
-}
-requestAnimationFrame(animar);
-
-
+pintarOndas();
+window.addEventListener("resize", pintarOndas);

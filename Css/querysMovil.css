@@ -1,65 +1,158 @@
-@media (max-width: 400px) {
+@media (max-width: 768px) {
 
+    body {
+        overscroll-behavior: none;
+    }
+
+    /* Barra superior */
+    .barraNavegacion {
+        height: 48px;
+        padding: 0 14px;
+    }
+
+    .logoFijo {
+        font-size: 13px;
+    }
+
+    /* Menu de anclas fuera en celular: las fichas no caben en la barra y
+       el scroll + los CTA del hero ya cubren la navegacion */
+    #menuOpciones {
+        display: none;
+    }
+
+    /* Aire de seccion reducido (el marco movil mide 10px) */
+    section,
+    .cabecera {
+        padding: calc(var(--margenMovil) + var(--aireMovil));
+    }
+
+    /* Portada */
     .FuenteTitulos {
-        font-size: 46px;
-        margin: var(--margenMovil);
-        margin-bottom: -14px;
+        font-size: 34px;
     }
 
     .subtituloTitulo {
         font-size: 12px;
-        margin-left: var(--margenMovil);
     }
 
-    #menuOpciones ul {
-        font-size: 26px;
-        margin-top: 9%;
-        margin-left: var(--margenMovil);
+    .estadoDisponibilidad {
+        font-size: 10px;
+        margin-bottom: 16px;
     }
 
-    .contenedorProyectos {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 28px;
+    .ganchoHero {
+        font-size: 13px;
+        margin-top: 16px;
     }
 
-    .listaProyectos {
-        margin-left: var(--margenMovil);
+    .accionesHero {
+        margin-top: 24px;
     }
 
-    .contenedor-informacion {
-        max-width: 100%;
-        max-height: none;
-        margin-left: var(--margenMovil);
-        text-align: left;
+    .botonCTA {
+        padding: 10px 16px;
+        font-size: 13px;
     }
 
-    .contenedor-informacion img {
-        max-width: 150px;
-        max-height: 150px;
-        margin-top: 18px;
-    }
-
-    .proyectosDetalles p {
-        max-width: 100%;
-        font-size: 1rem;
-    }
-
-    .fuenteTituloSeccion {
-        font-size: 54px;
-        left: var(--margenMovil);
+    /* Titulos fantasma: abajo-izquierda, chicos y sin rotacion */
+    .tituloFantasma {
+        font-size: 40px;
+        left: var(--insetMovil);
         right: auto;
-        top: auto;
         bottom: 10px;
     }
 
-    .fuenteTituloSeccion2 {
-        font-size: 54px;
-        left: auto;
-        right: calc(var(--margenMovil) + 6px);
-        top: auto;
-        bottom: 12%;
+    .tituloFantasma--info {
+        writing-mode: horizontal-tb;
+        transform: none;
     }
 
+    /* Proyectos: una sola columna */
+    .contenedorProyectos {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 48px;
+    }
+
+    .listaProyectos button {
+        font-size: 16px;
+    }
+
+    .contenedorProyectos .proyectosDetalles {
+        display: flex;
+        flex-direction: column;
+        row-gap: 10px;
+    }
+
+    .contenedorProyectos .proyectosDetalles>* {
+        margin: 0;
+    }
+
+    .contenedorProyectos .proyectosDetalles #detalle-titulo {
+        order: 1;
+        font-size: 18px;
+    }
+
+    .contenedorProyectos .proyectosDetalles #detalle-fecha {
+        order: 2;
+    }
+
+    .contenedorProyectos .proyectosDetalles #detalle-descripcion {
+        order: 3;
+        max-width: 100%;
+        font-size: 12px;
+    }
+
+    .contenedorProyectos .proyectosDetalles #detalle-imagen {
+        order: 4;
+        max-width: 180px;
+        margin-top: 10px;
+    }
+
+    .contenedorProyectos .proyectosDetalles .tagsProyecto {
+        order: 5;
+        margin-top: 8px;
+    }
+
+    .contenedorProyectos .proyectosDetalles .enlaceRepo {
+        order: 6;
+        margin-top: 8px;
+    }
+
+    /* Informacion */
+    .contenedor-informacion {
+        max-width: 100%;
+        text-align: justify;
+    }
+
+    .contenedor-informacion .fotoPerfil {
+        max-width: 120px;
+        max-height: 120px;
+        margin-top: 12px;
+    }
+
+    .fuenteSecundaria {
+        font-size: 18px;
+    }
+
+    .SeccionInformacion {
+        font-size: 12px;
+    }
+
+    .tituloTecnologias {
+        margin-top: 14px;
+    }
+
+    .gruposTecnologias {
+        gap: 22px;
+        margin-top: 10px;
+    }
+
+    /* Contacto */
+    .contenedorContacto .fuenteSecundaria {
+        font-size: 22px;
+    }
+
+    /* Marco mas delgado */
     .margenIzquierdo {
         top: var(--margenMovil);
         bottom: var(--margenMovil);
@@ -88,19 +181,27 @@
         height: var(--margenMovil);
     }
 
+    /* Iconos sociales: abajo a la derecha para no chocar con la barra */
     .iconosContacto {
-        top: var(--margenMovil);
-        left: 4px;
+        flex-direction: row;
+        top: auto;
+        left: auto;
+        bottom: 18px;
+        right: 14px;
         gap: 8px;
     }
 
-    .iconosContacto img {
+    .iconosContacto svg {
         width: 20px;
         height: 20px;
     }
 
     .lineaHorizontal,
-    .leyendaHorizontal {
+    .leyendaHorizontal,
+    .contadorSeccion,
+    .leyendaSeccion,
+    .leyendaCoordenadas,
+    .lunaFases {
         display: none;
     }
 
@@ -108,73 +209,5 @@
         grid-template-columns: repeat(16, 1fr);
         gap: 14px;
         padding: 20px;
-    }
-}
-
-@media (max-width: 400px) {
-    .FuenteTitulos {
-        font-size: 38px;
-    }
-
-    #menuOpciones ul {
-        font-size: 22px;
-    }
-
-    .listaProyectos button {
-        font-size: 24px;
-    }
-
-    .proyectosDetalles h2 {
-        font-size: 24px;
-        margin-bottom: 24px;
-    }
-
-    .fuenteTituloSeccion,
-    .fuenteTituloSeccion2 {
-        font-size: 44px;
-    }
-
-    .gridOndas {
-        grid-template-columns: repeat(10, 1fr);
-        gap: 10px;
-        padding: 14px;
-    }
-}
-
-@media (max-width: 340px) {
-    .FuenteTitulos {
-        font-size: 32px;
-    }
-
-    .subtituloTitulo {
-        font-size: 11px;
-    }
-
-    #menuOpciones ul {
-        font-size: 19px;
-    }
-
-    .contenedor-informacion {
-        margin-left: 12px;
-        margin-right: 12px;
-    }
-
-    .listaProyectos {
-        margin-left: 12px;
-    }
-
-    .listaProyectos button {
-        font-size: 21px;
-    }
-
-    .fuenteTituloSeccion,
-    .fuenteTituloSeccion2 {
-        font-size: 36px;
-    }
-
-    .gridOndas {
-        grid-template-columns: repeat(8, 1fr);
-        gap: 8px;
-        padding: 10px;
     }
 }

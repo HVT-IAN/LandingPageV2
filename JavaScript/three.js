@@ -63,6 +63,19 @@ queryMovimiento.addEventListener("change", (e) => {
     reducirMovimiento = e.matches;
 });
 
+// --- Parallax de mouse: la mirada se desvia hacia el cursor (solo con
+// puntero fino y con movimiento permitido). La pose base la sigue
+// escribiendo el scroll; este offset solo inclina la mirada ~2 grados. ---
+const punteroFino = window.matchMedia("(pointer: fine)");
+const objetivoMouse = { x: 0, y: 0 };
+const suaveMouse = { x: 0, y: 0 };
+
+window.addEventListener("pointermove", (e) => {
+    if (!punteroFino.matches || reducirMovimiento) return;
+    objetivoMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    objetivoMouse.y = (e.clientY / window.innerHeight) * 2 - 1;
+}, { passive: true });
+
 const ambientLight = new THREE.AmbientLight(0xbfbfbf, 0.9);
 escena.add(ambientLight);
 
@@ -76,12 +89,13 @@ const outsideGroup = new THREE.Group();
 outsideGroup.position.set(0, 1.0, -130);
 escena.add(outsideGroup);
 
-const starCount = 5000;
+const starCount = 6000;
 const starGeo = new THREE.BufferGeometry();
 
 const posBase = new Float32Array(starCount * 3);
 const posProyectos = new Float32Array(starCount * 3);
 const posInformacion = new Float32Array(starCount * 3);
+const posContacto = new Float32Array(starCount * 3);
 
 const capas = [
     { r: 45, n: 1800 },
@@ -108,7 +122,9 @@ const coloresBase = new Float32Array(starCount * 3);
 for (let i = 0; i < starCount; i++) {
     const i3 = i * 3;
     const d = Math.hypot(posBase[i3], posBase[i3 + 1], posBase[i3 + 2]);
-    const v = Math.pow(Math.min(1, d / rMaxCapa), 0.9) * 0.75;
+    const t = Math.pow(Math.min(1, d / rMaxCapa), 0.9);
+    // Gris tenue al centro, mas claro hacia afuera (paleta blanco/negro)
+    const v = t * 0.75;
     coloresBase[i3] = v;
     coloresBase[i3 + 1] = v;
     coloresBase[i3 + 2] = v;
@@ -132,24 +148,21 @@ function construirSegmentos(tipo) {
             base.push([baseR * Math.cos(ang), baseY, baseR * Math.sin(ang)]);
         }
         const apex = [0, apexY, 0];
-
-        // aristas de la base
         for (let k = 0; k < 3; k++) {
             const a = base[k];
             const b = base[(k + 1) % 3];
             segs.push([a[0], a[1], a[2], b[0], b[1], b[2]]);
         }
-        // aristas del apex a cada vertice de la base
         for (let k = 0; k < 3; k++) {
             const b = base[k];
             segs.push([apex[0], apex[1], apex[2], b[0], b[1], b[2]]);
         }
-    } else {
-        const largo = 150;
-        const radio = 26;
-        const vueltas = 2.2;
+    } else if (tipo === "informacion") {
+        const largo = 200;
+        const radio = 30;
+        const vueltas = 1.4;
         const pasos = 100;
-        const cadaTrav = 6;     // un travesano cada N pasos
+        const cadaTrav = 6;
 
         const punto = (t, fase) => {
             const ang = t * vueltas * Math.PI * 2 + fase;
@@ -176,6 +189,36 @@ function construirSegmentos(tipo) {
             // travesanos: unen las dos hebras a la misma altura
             if (s % cadaTrav === 0) {
                 segs.push([a0[0], a0[1], a0[2], b0[0], b0[1], b0[2]]);
+            }
+        }
+    } else {
+        // Icosaedro: figura de la seccion CONTACTO. 12 vertices y 30 aristas
+        // rectas; al repartir los puntos solo sobre las aristas (~200 por
+        // arista) se lee como un cristal de puras aristas, no como una pelota.
+        const phi = (1 + Math.sqrt(5)) / 2;
+        const escala = 16; // radio circunscrito ~= 30, tamano similar al aro anterior
+        const verts = [
+            [0, 1, phi], [0, 1, -phi], [0, -1, phi], [0, -1, -phi],
+            [1, phi, 0], [1, -phi, 0], [-1, phi, 0], [-1, -phi, 0],
+            [phi, 0, 1], [-phi, 0, 1], [phi, 0, -1], [-phi, 0, -1]
+        ].map((v) => [v[0] * escala, v[1] * escala, v[2] * escala]);
+
+        // En esta construccion cada arista mide 2 (antes de escalar): hay que
+        // conectar exactamente las parejas de vertices a esa distancia.
+        const arista = 2 * escala;
+        for (let i = 0; i < verts.length; i++) {
+            for (let j = i + 1; j < verts.length; j++) {
+                const d = Math.hypot(
+                    verts[i][0] - verts[j][0],
+                    verts[i][1] - verts[j][1],
+                    verts[i][2] - verts[j][2]
+                );
+                if (Math.abs(d - arista) < 0.01) {
+                    segs.push([
+                        verts[i][0], verts[i][1], verts[i][2],
+                        verts[j][0], verts[j][1], verts[j][2]
+                    ]);
+                }
             }
         }
     }
@@ -209,6 +252,7 @@ function repartirSobreSegmentos(destino, segs) {
 
 repartirSobreSegmentos(posProyectos, construirSegmentos("proyectos"));
 repartirSobreSegmentos(posInformacion, construirSegmentos("informacion"));
+repartirSobreSegmentos(posContacto, construirSegmentos("contacto"));
 
 function coloresPorAltura(pos, minV, maxV) {
     const cols = new Float32Array(starCount * 3);
@@ -231,11 +275,15 @@ function coloresPorAltura(pos, minV, maxV) {
 
 const coloresProyectos = coloresPorAltura(posProyectos, 0.30, 0.92);
 const coloresInformacion = coloresPorAltura(posInformacion, 0.30, 0.92);
+const coloresContacto = coloresPorAltura(posContacto, 0.30, 0.92);
 
 // Array propio de la geometria: BufferAttribute no copia el array
 starGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(posBase), 3));
 starGeo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(coloresBase), 3));
 
+// Puntos negros sobre el fondo blanco de la pagina (paleta blanco/negro).
+// El color del material multiplica las vertexColors, igual que en el diseno
+// original.
 const starMat = new THREE.PointsMaterial({
     color: 0x000000,
     size: 0.5,
@@ -248,17 +296,6 @@ outsideGroup.add(stars);
 const poliGroup = new THREE.Group();
 escena.add(poliGroup);
 
-// Amplificacion lateral del campo de poligonos. 1 = tal cual esta en poliDefs,
-// que es el valor por defecto y no cambia nada.
-//
-// En pantallas verticales el campo es mas ancho que el marco incluso en la pose
-// de inicio: mide ~106 unidades de extent lateral (contando el radio en la
-// peor orientacion de giro) y en 375px el medio ancho llega a 83 al arrancar y
-// baja a 57 en la pose final, asi que las losas de los extremos se recortan por
-// los bordes. Se deja a proposito: las losas ya giran solas y entraban y salian
-// del marco de todos modos, y un campo que se sale del marco se lee como mas
-// espacio que un diorama contenido. Bajar esto a ~0.7 las mete sin tocar el
-// dolly, por si en un movil se ve que recorta de mas.
 const ampliacionLateral = 1;
 
 const poliDefs = [
@@ -269,13 +306,15 @@ const poliDefs = [
     { lados: 3, radio: 10, x: 18, y: 36, z: -225, vel: 0.0007 },
     { lados: 4, radio: 21, x: -76, y: 24, z: -118, vel: 0.0013 },
     { lados: 5, radio: 11, x: 40, y: -36, z: -60, vel: 0.0019 },
-    { lados: 8, radio: 17, x: -20, y: -32, z: -248, vel: 0.0006 }
+    { lados: 8, radio: 17, x: -20, y: -32, z: -248, vel: 0.0006 },
+    { lados: 5, radio: 12, x: 90, y: -40, z: -100, vel: 0.0030 },
 ];
 
 const poliNear = -60;
 const poliFar = -250;
 const poliVivos = [];
 
+// Grises originales del diseno blanco/negro
 const paletaPoligonos = [
     0xc4c4c4, // gris claro
     0xd6d6d6, // gris palido
@@ -333,58 +372,56 @@ for (let n = 0; n < poliDefs.length; n++) {
     poliGroup.add(losa);
 }
 
-// --- Morphing por scroll ---
-// Los tres estados dejan de ser destinos a los que se salta y pasan a ser
-// keyframes colocados en el centro de cada seccion. El scroll llega ya
-// suavizado: Lenis escribe el scrollTop de verdad (no un transform), asi que
-// window.scrollY es el valor interpolado y no hay que consultarle nada.
-const morphEstados = {
-    "#inicio": { pos: posBase, col: coloresBase },
-    "#panel-proyectos": { pos: posProyectos, col: coloresProyectos },
-    "#panel-informacion": { pos: posInformacion, col: coloresInformacion }
-};
-
-const cameraWaypoints = {
+const estados = {
     "#inicio": {
-        position: new THREE.Vector3(0, 1.7, 0.6),
-        target: new THREE.Vector3(0, 1.2, -50)
+        pos: posBase,
+        col: coloresBase,
+        pose: {
+            position: new THREE.Vector3(0, 1.7, 0.6),
+            target: new THREE.Vector3(0, 1.2, -50)
+        },
+        giro: 0.0003
     },
     "#panel-proyectos": {
-        position: new THREE.Vector3(-6, 2, -20),
-        target: new THREE.Vector3(-2, 1.55, -50)
+        pos: posProyectos,
+        col: coloresProyectos,
+        pose: {
+            position: new THREE.Vector3(-6, 2, -20),
+            target: new THREE.Vector3(-2, 1.55, -50)
+        },
+        giro: 0.0025
     },
     "#panel-informacion": {
-        position: new THREE.Vector3(1, -1, -40),
-        target: new THREE.Vector3(1.5, 1.15, -50)
+        pos: posInformacion,
+        col: coloresInformacion,
+        pose: {
+            position: new THREE.Vector3(1, -1, -40),
+            target: new THREE.Vector3(1.5, 1.15, -50)
+        },
+        giro: 0.0018
+    },
+    "#panel-contacto": {
+        pos: posContacto,
+        col: coloresContacto,
+        pose: {
+            position: new THREE.Vector3(0, 5, -22),
+            target: new THREE.Vector3(0, 1, -60)
+        },
+        giro: 0.004
     }
 };
 
-// Velocidad de giro por estado. Antes salia de un if/else sobre la seccion
-// activa; ahora se interpola con el mismo progreso que la mezcla.
-const girosPorEstado = {
-    "#inicio": 0.0003,
-    "#panel-proyectos": 0.0025,
-    "#panel-informacion": 0.0018
-};
+// Orden del recorrido. Decide si al ir de un estado a otro se anima hacia
+// delante (t de 0 a 1) o hacia atras (t de 1 a 0).
+const orden = Object.keys(estados);
 
 const atrPos = starGeo.getAttribute("position");
 const atrCol = starGeo.getAttribute("color");
 const total = starCount * 3;
 const cameraTarget = new THREE.Vector3(0, 1.3, -50);
-
-// Fraccion de cada tramo reservada en cada extremo para la figura ya completa.
-// El morph se comprime en el (1 - 2 * meseta) central.
-//
-// Esto es lo que hace que las secciones se distinguen. Sin meseta, el smoothstep
-// reparte la mezcla por todo el tramo, y como los tramos miden casi dos
-// pantallas el primero y una el segundo, se pasaba mas de 900px con la figura a
-// medio formar: media esfera, medio tetraedro, ninguna de las dos. Con la
-// meseta la figura se queda quieta y terminada mientras se lee su seccion, y el
-// cambio ocurre en un tramo corto y reconocible.
-//
-// De paso sale gratis en GPU: durante la meseta t vale 0 exacto, asi que el
-// indice + t no se mueve y escribirMorph no llega a llamarse.
-const meseta = 0.30;
+// Mirada con el desvio de parallax de mouse: no se muta cameraTarget,
+// que escribirCamara controla con la interpolacion del scroll.
+const miradaParallax = new THREE.Vector3();
 
 // Cuanto se apagan las estrellas en el centro del cruce. 0 = sin fundido,
 // 1 = desaparecen del todo. Se aplica al atributo de color, no a
@@ -393,87 +430,32 @@ const meseta = 0.30;
 // poligonos.
 const profundidadFundido = 0.75;
 
-// indice del ultimo keyframe escrito + su t. -1 fuerza la primera escritura.
-let progresoGlobal = -1;
-// Par de keyframes y mezcla del frame en curso, para el giro y la camara.
-let mezclaActual = null;
-// Cada keyframe con la coordenada de scroll a la que corresponde.
-let keyframes = [];
+// Estado en el que arranca la pagina. script.js lo lee de window para saber que
+// seccion marcar al pintar el menu.
+const ESTADO_INICIAL = "#inicio";
 
-function medirKeyframes() {
-    // Techo real del scroll. El centro de la ultima seccion cae por fuera: con
-    // dos secciones de 100vh el alto total no da para dejarla centrada, asi que
-    // sin este tope su keyframe queda ahi arriba y la figura de informacion
-    // nunca llega a completarse.
-    const maxScroll = Math.max(
-        0,
-        document.documentElement.scrollHeight - window.innerHeight
-    );
+// Duracion por defecto del salto entre estados.
+const duracionSalto = 1.4;
 
-    keyframes = Object.keys(morphEstados).map((hash) => {
-        const el = document.querySelector(hash);
-        // "#inicio" no tiene elemento: es el tope de la pagina.
-        let y = 0;
-        if (el) {
-            const r = el.getBoundingClientRect();
-            y = Math.min(maxScroll, r.top + window.scrollY + r.height / 2);
-        }
-        return {
-            hash,
-            y,
-            estado: morphEstados[hash],
-            pose: cameraWaypoints[hash],
-            giro: girosPorEstado[hash]
-        };
-    });
-    keyframes.sort((a, b) => a.y - b.y);
-    progresoGlobal = -1;
-}
-
-// Devuelve los dos keyframes entre los que cae el scroll y la mezcla t.
-function mezclar(y) {
-    const primero = keyframes[0];
-    if (y <= primero.y) return { i: 0, a: primero, b: primero, t: 0 };
-
-    const ultimo = keyframes[keyframes.length - 1];
-    if (y >= ultimo.y) return { i: keyframes.length - 1, a: ultimo, b: ultimo, t: 0 };
-
-    for (let i = 0; i < keyframes.length - 1; i++) {
-        const a = keyframes[i];
-        const b = keyframes[i + 1];
-        if (y >= a.y && y <= b.y) {
-            // span 0 pasa cuando dos keyframes caen en el mismo scroll, que
-            // ocurre si la pagina se queda corta: se toma el estado destino.
-            const span = b.y - a.y;
-            if (span <= 0) return { i, a, b, t: 1 };
-
-            const pos = (y - a.y) / span;
-            if (pos <= meseta) return { i, a, b, t: 0 };
-            if (pos >= 1 - meseta) return { i, a, b, t: 1 };
-
-            // Se recorta la meseta de los dos extremos y el smoothstep se
-            // aplica sobre lo que queda en el medio.
-            const u = (pos - meseta) / (1 - 2 * meseta);
-            return { i, a, b, t: u * u * (3 - 2 * u) };
-        }
-    }
-
-    return { i: keyframes.length - 1, a: ultimo, b: ultimo, t: 0 };
-}
+let hashActual = ESTADO_INICIAL;
+// Par de estados y mezcla del frame en curso. El giro se interpola con lo mismo.
+// Al arrancar los dos son el mismo estado con t=0, y escribirMorph sin rama de
+// reposo ya devuelve la figura exacta: no hace falta un caso aparte.
+let parActual = { a: estados[ESTADO_INICIAL], b: estados[ESTADO_INICIAL] };
+let tActual = 0;
+let tweenEnCurso = null;
+let velocidadGiro = estados[ESTADO_INICIAL].giro;
+// Factor 0..1 de la respiracion del icosaedro (solo en CONTACTO)
+let pulsoContacto = 0;
 
 function escribirMorph(a, b, t) {
     const pa = atrPos.array;
     const ca = atrCol.array;
-    const ap = a.estado.pos;
-    const ac = a.estado.col;
-    const bp = b.estado.pos;
-    const bc = b.estado.col;
+    const ap = a.pos;
+    const ac = a.col;
+    const bp = b.pos;
+    const bc = b.col;
 
-    // En el centro del cruce las estrellas se van a blanco sobre el fondo
-    // blanco, o sea desaparecen, y el paso se lee como un disolverse y
-    // reconstituirse en vez de una deformacion amorfa. En t=0 y t=1 vale 1
-    // justo, asi que las figuras terminadas no se tocan y la rama de movimiento
-    // reducido (que escribe con t=0) tampoco se ve afectada.
     const atenuacion = 1 - profundidadFundido * Math.sin(Math.PI * t);
 
     for (let i = 0; i < total; i++) {
@@ -503,48 +485,59 @@ function escribirCamara(a, b, t) {
     );
 }
 
-function aplicarScroll() {
-    const mezcla = mezclar(window.scrollY);
-    mezclaActual = mezcla;
+function aplicarEstado() {
+    escribirMorph(parActual.a, parActual.b, tActual);
+    escribirCamara(parActual.a, parActual.b, tActual);
+}
 
-    // Sin movimiento no hay interpolacion: se escribe el keyframe mas cercano
-    // tal cual. La camara se queda quieta en la pose de inicio, sin dolly.
+function irA(hash, duracion) {
+    const destino = estados[hash];
+    if (!destino) return;
+
+    const origen = estados[hashActual];
+    if (origen === destino) return;
+
+    const haciaAdelante = orden.indexOf(hash) > orden.indexOf(hashActual);
+    const a = haciaAdelante ? origen : destino;
+    const b = haciaAdelante ? destino : origen;
+
+    if (tweenEnCurso) tweenEnCurso.kill();
+    tweenEnCurso = null;
+
+    parActual = { a, b };
+    hashActual = hash;
+
     if (reducirMovimiento) {
-        const elegirB = mezcla.t >= 0.5;
-        const g = mezcla.i + (elegirB ? 1 : 0);
-        if (g !== progresoGlobal) {
-            const kf = elegirB ? mezcla.b : mezcla.a;
-            escribirMorph(kf, kf, 0);
-            progresoGlobal = g;
-        }
+        tActual = haciaAdelante ? 1 : 0;
+        aplicarEstado();
         return;
     }
 
-    // indice + t es un unico escalar monotono a lo largo de todo el recorrido.
-    // Comparar solo t daria un falso negativo al cambiar de par de keyframes
-    // manteniendo el mismo t, que es justo lo que pasa en el centro de cada
-    // seccion.
-    const g = mezcla.i + mezcla.t;
-    if (Math.abs(g - progresoGlobal) > 0.0004) {
-        escribirMorph(mezcla.a, mezcla.b, mezcla.t);
-        progresoGlobal = g;
-    }
+    const desde = haciaAdelante ? 0 : 1;
+    const hasta = haciaAdelante ? 1 : 0;
+    const progreso = { t: desde };
+    tActual = desde;
 
-    // La camara se interpola siempre, sin guarda: si el morph se funde y la
-    // camara saltara entre poses, el conjunto se rompe.
-    escribirCamara(mezcla.a, mezcla.b, mezcla.t);
+    tweenEnCurso = gsap.to(progreso, {
+        t: hasta,
+        duration: duracion || duracionSalto,
+        ease: "power2.inOut",
+        onUpdate() {
+            tActual = progreso.t;
+            aplicarEstado();
+        },
+        onComplete() {
+            tweenEnCurso = null;
+        }
+    });
 }
-
-let velocidadGiro = 0.0003;
 
 function animacion() {
     requestAnimationFrame(animacion);
 
-    aplicarScroll();
-
     if (!reducirMovimiento) {
-        const giroObjetivo = mezclaActual.a.giro
-            + (mezclaActual.b.giro - mezclaActual.a.giro) * mezclaActual.t;
+        const giroObjetivo = parActual.a.giro
+            + (parActual.b.giro - parActual.a.giro) * tActual;
 
         velocidadGiro += (giroObjetivo - velocidadGiro) * 0.05;
         outsideGroup.rotation.y += velocidadGiro;
@@ -557,15 +550,32 @@ function animacion() {
         }
     }
 
-    camara.lookAt(cameraTarget);
+    // Respiracion de la figura de CONTACTO: pulso de escala ±2% con periodo
+    // ~4s. El factor se aproxima suave al entrar/salir de la seccion y se
+    // anula con movimiento reducido.
+    const enContacto = hashActual === "#panel-contacto" ? 1 : 0;
+    pulsoContacto += (enContacto - pulsoContacto) * 0.02;
+    if (!reducirMovimiento && pulsoContacto > 0.001) {
+        const latido = 1 + pulsoContacto * 0.02 * Math.sin(performance.now() / 1000 * 1.5);
+        outsideGroup.scale.setScalar(latido);
+    } else {
+        outsideGroup.scale.setScalar(1);
+    }
+
+    // Mirada = objetivo de la pose + desvio suavizado hacia el cursor
+    suaveMouse.x += (objetivoMouse.x - suaveMouse.x) * 0.05;
+    suaveMouse.y += (objetivoMouse.y - suaveMouse.y) * 0.05;
+    miradaParallax.set(
+        cameraTarget.x + suaveMouse.x * 2.5,
+        cameraTarget.y - suaveMouse.y * 1.5,
+        cameraTarget.z
+    );
+    camara.lookAt(miradaParallax);
 
     renderizado.render(escena, camara);
 }
 
-medirKeyframes();
-// Las fuentes y las imagenas tardan en cargar y cambian la altura de las
-// secciones, asi que los keyframes se vuelven a medir cuando ya esta todo.
-window.addEventListener("load", medirKeyframes);
+aplicarEstado();
 
 if (renderizado) animacion();
 
@@ -574,5 +584,29 @@ window.addEventListener("resize", () => {
     if (renderizado) {
         renderizado.setSize(window.innerWidth, window.innerHeight);
     }
-    medirKeyframes();
 });
+
+// Puente para el scroll: script.js llama a establecerMezcla(iA, iB, t) cada
+// frame de scroll y el motor 3D escribe la mezcla exacta entre dos estados
+// vecinos (sin tween, porque la animacion la pone el propio desplazamiento).
+function establecerMezcla(iA, iB, t) {
+    const ultimo = orden.length - 1;
+    const indiceA = Math.max(0, Math.min(ultimo, iA));
+    const indiceB = Math.max(0, Math.min(ultimo, iB));
+
+    const a = estados[orden[indiceA]];
+    const b = estados[orden[indiceB]] || a;
+
+    if (tweenEnCurso) tweenEnCurso.kill();
+    tweenEnCurso = null;
+
+    parActual = { a, b };
+    tActual = Math.max(0, Math.min(1, t));
+    hashActual = t >= 0.5 ? orden[indiceB] : orden[indiceA];
+    aplicarEstado();
+}
+
+window.irAEstado = irA;
+window.ESTADO_INICIAL = ESTADO_INICIAL;
+window.establecerMezcla = establecerMezcla;
+window.ORDEN_ESTADOS = orden;

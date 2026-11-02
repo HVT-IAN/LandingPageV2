@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: actmijangos-cms
+    runtime: python
+    plan: free
+    rootDir: Backend/cms-backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false

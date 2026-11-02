@@ -1,244 +1,454 @@
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     padding: 0;
-    overflow-x: hidden;
-    background-color: #ffffff;
+    background-color: var(--fondo);
     background-image: radial-gradient(circle, #000000 0.5px, transparent 0.6px);
     background-size: 7px 7px;
     background-attachment: fixed;
-}
-
-/* Con scroll nativo las secciones ya no se ocultan entre si: cada una ocupa
-   una pantalla y va apareciendo segun bajas. .active ya no decide si algo se ve,
-   solo dispara la animacion de entrada de la que este en pantalla.
-
-   flow-root para que los margenes de los hijos no se escapen. El <p> de la
-   descripcion de proyecto colapsaba su margin-bottom hacia fuera y empujaba la
-   seccion siguiente 23px, con lo que las cajas no emballen en el alto exacto que
-   miden los keyframes del fondo 3D y el hueco salia de 80vh + 23.
-
-   min-height y no svh a proposito: svh cambia de alto al contraerse la barra de
-   URL del movil, y los keyframes del fondo 3D se miden contra estas alturas, asi
-   que con svh la figura se moveria sola al scrollear. */
-section {
-    display: flow-root;
-    min-height: 100vh;
-}
-
-/* Hueco entre secciones. Sin esto el morph no cabe: las secciones estaban pegadas
-   y el tramo entre keyframes media 823px, con lo que la banda de morph (329px)
-   se colaba 153px dentro de la seccion siguiente y la figura llegaba a formarse
-   cuando ya ibas por la mitad. separating las etapas el tramo pasa a 180vh y la
-   banda cabe entera en el hueco.
-
-   Solo la primera seccion de cada padre; la ultima ya tiene la holgura del
-   padding-bottom de <main>. */
-.cabecera,
-main section:not(:last-of-type) {
-    margin-bottom: var(--altoTransicion);
-}
-
-/* Holgura al final de la pagina. Sin ella la ultima seccion nunca puede
-   quedar centrada (el scroll topa antes), y ademas el keyframe 3 del fondo 3D
-   queda justo en el tope del recorrido, sin sitio para quedarse quieto con la
-   figura ya completa. */
-main {
-    padding-bottom: 75vh;
-}
-
-section.active {
-    animation: slideEntrada 1.2s ease-in-out;
-}
-
-@keyframes slideEntrada {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* La portada es una etapa del recorrido igual que las secciones: el fondo 3D toma
-   su centro como primer keyframe, asi que tiene que medir exactamente una
-   pantalla. El min-height va aqui y no en .menuPrincipal porque .menuPrincipal es
-   el ultimo elemento en flujo y el min-height se le SUMABA a los 302px del titulo
-   y el subtitulo, dejando la portada en 1.38 pantallas en vez de una. Con las tres
-   etapas desiguales los dos tramos entre keyframes median 1502px y 823px, y por
-   eso la banda del segundo tramo no cabia antes de la seccion.
-
-   flow-root para que el margin-top del h1 no colapse hacia fuera. */
-.cabecera {
-    display: flow-root;
-    min-height: 100vh;
-}
-
-/* El menu esta siempre en el flujo. Su alto lo pone ahora la cabecera, que lo
-   envuelve. */
-.menuPrincipal {
-    display: block;
+    color: var(--texto);
+    overflow-x: hidden;
+    scroll-snap-type: y proximity;
 }
 
 a {
     color: inherit;
 }
 
+/* --- Secciones: exactamente una pantalla cada una ---
+   border-box hace que el padding viva DENTRO del min-height:100vh, asi el
+   scroll, el snap y el morph del fondo 3D quedan sincronizados 1:1
+   (una pantalla = una seccion = una figura). El aire de padding garantiza
+   >= 50px entre las lineas del marco y el contenido. */
+section {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: calc(var(--margen) + var(--aire));
+    overflow: hidden;
+}
+
+/* --- Barra de navegacion fija (vive en la franja del marco superior) --- */
+.barraNavegacion {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--margen);
+    padding: 0 var(--inset);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 6;
+    font-family: "Poppins", sans-serif;
+    pointer-events: none;
+}
+
+.barraNavegacion a {
+    pointer-events: auto;
+}
+
+.logoFijo {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--texto);
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+
+/* En la portada el nombre ya sale gigante: el logo chico se esconde */
+body.enCima .logoFijo {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#menuOpciones ul {
+    display: flex;
+    gap: 12px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* La nav usa el mismo sistema de poligono que el resto de los botones.
+   Aqui sin mix-blend-mode: la barra fija (position: fixed + z-index) es un
+   stacking context que aisla el fondo de la pagina, asi que el truco de la
+   diferencia no aplicaria; el poligono gris con texto negro lee igual de bien. */
+.enlaceNav {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--textoTenue);
+    text-decoration: none;
+    padding: 8px 16px;
+    transition: color 0.4s ease;
+}
+
+.enlaceNav::before,
+.enlaceNav::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.enlaceNav::before {
+    background-color: #c2c2c291;
+    transition: clip-path 0.3s ease;
+}
+
+.enlaceNav::after {
+    background-color: #17171778;
+    transform: translate(10px, 10px) rotate(2deg);
+    transition: clip-path 0.4s ease-out;
+    opacity: 0.3;
+}
+
+.enlaceNav:hover,
+.enlaceNav.activo {
+    color: var(--texto);
+}
+
+.enlaceNav:hover::before,
+.enlaceNav:hover::after,
+.enlaceNav.activo::before,
+.enlaceNav.activo::after {
+    clip-path: polygon(79% 17%, 0% 79%, 100% 79%);
+}
+
+/* --- Portada (hero) --- */
+.cabecera {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: calc(var(--margen) + var(--aire));
+    overflow: hidden;
+}
+
+/* Estado de disponibilidad: lenguaje "instrumento" acorde al marco */
+.estadoDisponibilidad {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--fuenteTecnica);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--textoTenue);
+    margin: 0 0 22px 0;
+}
+
+.estadoDisponibilidad .puntoEstado {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--texto);
+    animation: pulsoEstado 2.4s ease-in-out infinite;
+}
+
+@keyframes pulsoEstado {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.35;
+        transform: scale(0.75);
+    }
+}
+
+/* El nombre se mezcla por diferencia con el fondo: sobre el blanco se ve
+   negro y se invierte al cruzarse con las particulas/poligonos negros 3D. */
 .FuenteTitulos {
     font-family: "Poppins", sans-serif;
-    margin: 70px;
-    margin-bottom: -40px;
-    font-size: 102px;
+    font-size: clamp(48px, 9vw, 102px);
     font-weight: 700;
-    transition: 0.5s ease;
+    margin: 0;
     color: #ffffff;
     mix-blend-mode: difference;
     -webkit-text-stroke: 1px #000000;
+    transition: 0.5s ease;
+    width: fit-content;
 }
 
 .FuenteTitulos:hover {
-
     transform: scale(1.0035);
     color: #515151;
 }
 
 .subtituloTitulo {
     font-family: "Poppins", sans-serif;
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 500;
-    margin-left: 74px;
-    color: rgb(0, 0, 0);
+    margin: 12px 0 0;
+    color: var(--texto);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.ganchoHero {
+    font-family: "Montserrat", sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--texto);
+    max-width: 520px;
+    margin: 24px 0 0;
+}
+
+.accionesHero {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 36px;
+}
+
+/* Botones CTA con el poligono triangular original (misma receta que los
+   botones de proyectos): en reposo solo texto + una linea inferior sutil;
+   al hover se revela el triangulo con su cuña desfasada y el texto se
+   invierte por diferencia con el fondo. */
+.botonCTA {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    overflow: hidden;
+    padding: 12px 22px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(10, 10, 10, 0.35);
+    color: var(--texto);
+    font-family: "Montserrat", sans-serif;
+    font-size: 15px;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.4s ease, border-color 0.3s ease;
+}
+
+.botonCTA::before,
+.botonCTA::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.botonCTA::before {
+    background-color: #c2c2c291;
+    transition: clip-path 0.3s ease;
+}
+
+.botonCTA::after {
+    background-color: #17171778;
+    transform: translate(10px, 10px) rotate(2deg);
+    transition: clip-path 0.4s ease-out;
+    opacity: 0.3;
+}
+
+.botonCTA:hover {
+    color: #ffffff;
+    mix-blend-mode: difference;
+    border-bottom-color: transparent;
+}
+
+.botonCTA:hover::before,
+.botonCTA:hover::after {
+    clip-path: polygon(79% 17%, 0% 79%, 100% 79%);
+}
+
+/* Iconos SVG de plataforma: heredan currentColor del boton, asi se
+   invierten junto con el texto en el hover de diferencia */
+.botonCTA .iconoRed {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    fill: currentColor;
 }
 
 .fuenteSecundaria {
     font-family: "Montserrat", sans-serif;
-    font-size: 28px;
-    font-weight: 500;
-    margin-bottom: 5px;
-    color: rgb(0, 0, 0);
+    font-size: 26px;
+    font-weight: lighter;
+    color: var(--texto);
 }
 
 .SeccionInformacion {
     font-family: "Montserrat", sans-serif;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: lighter;
-    color: rgb(0, 0, 0);
+    color: var(--texto);
+    line-height: 1.6;
+    padding: 0;
 }
 
-.listaProyectos {
-    margin-left: 70px;
+/* --- Titulos fantasma ---
+   Viven DENTRO de su seccion (position absolute): viajan con el scroll,
+   nunca invaden el contenido de otra seccion y no dependen de JS. Van en
+   z-index: -1 (detras del contenido en flujo) y se mezclan por diferencia
+   con el fondo 3D, igual que el nombre. */
+.tituloFantasma {
+    position: absolute;
+    margin: 0;
+    z-index: -1;
+    font-family: "Poppins", sans-serif;
+    font-weight: bold;
+    font-size: clamp(56px, 8vw, 120px);
+    line-height: 1;
+    white-space: nowrap;
+    color: #ffffff;
+    mix-blend-mode: difference;
+    -webkit-text-stroke: 1px #000000;
+    pointer-events: none;
 }
 
+.tituloFantasma--proyectos {
+    left: 6%;
+    right: auto;
+    bottom: 5%;
+}
+
+/* Vertical por writing-mode + rotate(180deg): el resultado visual es el
+   mismo que el rotate(-90deg) original (letras giradas -90, se lee de
+   abajo hacia arriba), pero la caja nace angosta y el right la fija a
+   12px de la linea del marco en cualquier viewport. */
+.tituloFantasma--info {
+    right: calc(var(--margen) + 12px);
+    bottom: 12%;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
+.tituloFantasma--contacto {
+    left: 6%;
+    bottom: 6%;
+}
+
+/* --- Lista de proyectos (columna izquierda) --- */
 .listaProyectos button {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    overflow: hidden;
     background: none;
     border: none;
-    padding: 0;
-    margin: 0;
+    padding: 7px 14px;
+    margin: 10px 0 0 0;
     cursor: pointer;
     font-family: "Montserrat", sans-serif;
-    font-size: 30px;
+    font-size: 22px;
     font-weight: 500;
-    color: rgb(0, 0, 0);
-    margin-top: 20px;
-    transition: 0.2s ease;
+    color: var(--texto);
+    transition: color 0.4s ease;
 }
 
-.listaProyectos button:hover {
-    color: #44486f;
+.listaProyectos button::before,
+.listaProyectos button::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(0% 0%, 0% 0%, 0% 0%);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.listaProyectos button::before {
+    background-color: #c2c2c291;
+    transition: clip-path 0.3s ease;
+}
+
+.listaProyectos button::after {
+    background-color: #17171778;
+    transform: translate(10px, 10px) rotate(2deg);
+    transition: clip-path 0.4s ease-out;
+    opacity: 0.3;
+}
+
+.listaProyectos button:hover,
+.listaProyectos button.active {
+    color: rgb(255, 255, 255);
+    mix-blend-mode: difference;
+}
+
+.listaProyectos button:hover::before,
+.listaProyectos button:hover::after,
+.listaProyectos button.active::before,
+.listaProyectos button.active::after {
+    clip-path: polygon(79% 17%, 0% 79%, 100% 79%);
 }
 
 .listaProyectos h6 {
     font-family: "Montserrat", sans-serif;
-    font-size: 15px;
+    font-size: 13px;
     font-weight: lighter;
-    color: rgb(0, 0, 0);
+    color: var(--textoTenue);
     margin-left: 0;
-    margin-top: 10px;
+    margin-top: 6px;
 }
 
+.descripcionBoton {
+    display: none;
+}
+
+.itemBoton .tagsProyecto {
+    display: none;
+}
+
+/* --- Iconos laterales --- */
 .iconosContacto {
     display: flex;
     flex-direction: column;
     gap: 10px;
     position: fixed;
-    top: 40px;
+    top: 56px;
     left: 7px;
     z-index: 4;
 }
 
-.iconosContacto img {
-    opacity: 1;
+.iconosContacto svg {
     width: 25px;
     height: 25px;
-}
-
-/* Los dos titulos fantasma se quedan fijos y con su animacion de entrada, pero
-   pasan por DETRAS del texto de la seccion en vez de encima: z-index -1 los saca
-   de la capa de posicionadas y los mete en la de negativos, que se pinta despues
-   del fondo de la pagina pero antes de los bloques y del texto. Como los
-   contenedores de contenido no tienen fondo, la palabra se sigue viendo; lo que
-   deja de pasar es que las aristas del Poppins 152px se crucen con los glifos
-   del parrafo.
-
-   No tapa al canvas: #escena3d tambien esta en z-index -1, pero el canvas es el
-   primer elemento del body y estos titulos van despues, asi que en el mismo
-   z-index gana el que viene mas tarde en el DOM. */
-.fuenteTituloSeccion {
-    position: fixed;
-    left: 43%;
-    bottom: 60%;
-    z-index: -1;
-    font-size: 152px;
-    font-family: "Poppins", sans-serif;
-    font-weight: bold;
-    color: transparent;
-    -webkit-text-stroke: 1px #000000;
-}
-
-.fuenteTituloSeccion2 {
-    position: fixed;
-    bottom: 5%;
-    left: 82%;
-    z-index: -1;
-    font-size: 152px;
-    font-family: "Poppins", sans-serif;
-    font-weight: bold;
-    color: transparent;
-    -webkit-text-stroke: 1px #000000;
-}
-
-.fuenteTituloSeccion,
-.fuenteTituloSeccion2 {
-    display: none;
-    margin-bottom: 100px;
-}
-
-#panel-proyectos.active~.fuenteTituloSeccion {
-    display: block;
-    animation: slideEntrada 1.2s ease-in-out;
-}
-
-#panel-informacion.active~.fuenteTituloSeccion2 {
-    display: block;
-    animation: slideEntradaGirada 1.2s ease-in-out;
-    transform: rotate(-90deg);
-}
-
-@keyframes slideEntradaGirada {
-    from {
-        opacity: 0;
-        transform: rotate(-90deg) translateY(30px);
-    }
-
-    to {
-        opacity: 1;
-        transform: rotate(-90deg) translateY(0);
-    }
+    fill: var(--texto);
 }
 
 @media (prefers-reduced-motion: reduce) {
+
+    body {
+        scroll-snap-type: none;
+    }
 
     *,
     *::before,

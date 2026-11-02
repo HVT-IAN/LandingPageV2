@@ -1,0 +1,16 @@
+# Backend
+Backend/.venv/
+Backend/cms-backend/.env
+Backend/cms-backend/*.db
+Backend/cms-backend/uploads/*
+!Backend/cms-backend/uploads/.gitkeep
+Backend/cms-backend/__pycache__/
+Backend/cms-backend/**/__pycache__/
+Backend/cms-backend/.pytest_cache/
+
+# Python
+__pycache__/
+*.pyc
+
+# Sitio generado por el workflow de GitHub Pages
+_site/

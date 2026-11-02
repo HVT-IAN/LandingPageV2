@@ -4,18 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ian Oscani — Portafolio</title>
+    <title>Ian Oscani — Desarrollador Frontend</title>
     <meta name="description"
-        content="Estudiante de ingenieria en software. Diseno de interfaces, experiencias visuales y desarrollo web.">
-
-    <!-- Open Graph: controla como se ve el enlace al compartirlo en redes.
-         Falta og:image porque necesita una URL absoluta, que depende de donde
-         se publique el sitio. -->
-    <meta property="og:type" content="website">
-    <meta property="og:title" content="Ian Oscani — Portafolio">
-    <meta property="og:description"
-        content="Estudiante de ingenieria en software. Diseno de interfaces, experiencias visuales y desarrollo web.">
-
+        content="Soy Ian Oscani, desarrollador frontend. Diseño interfaces, experiencias visuales y desarrollo web: sitios responsive, animación con propósito y código limpio.">
     <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
     <link rel="stylesheet" href="Css/style.css">
@@ -23,116 +14,256 @@
     <link rel="stylesheet" href="Css/root.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- Solo las familias y pesos que el CSS usa de verdad: Poppins 500/700 y
-         Montserrat 300/500. Se quitaron Jost, Lato y Poiret One (no aparecen en
-         ningun font-family) y los pesos que no se usan. -->
     <link
         href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&family=Poppins:wght@500;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="Css/three.css">
-    <!-- Va el ultimo a proposito: los media query tienen que ganar a cualquier
-         regla que se declare despues en los otros CSS. -->
     <link rel="stylesheet" href="Css/querysMovil.css">
 </head>
 
 <body>
     <canvas id="escena3d"></canvas>
-    <!-- Retícula viva. El div es lo que faltaba: el CSS y el JS que la dibujan
-         ya existian, pero sin este contenedor no se creaba ningun span. -->
-    <div class="gridOndas"></div>
-    <header class="cabecera" id="inicio">
-        <h1 class="FuenteTitulos"><a href="#inicio" style="text-decoration: none;">IAN OSCANI</a></h1>
-        <h3 class="subtituloTitulo">Estudiante de ingenieria en software</h3>
-        <div class="iconosContacto">
-            <a href="https://www.instagram.com/hvtkndr_ian/">
-                <img src="https://cdn.svglogos.dev/logos/instagram-icon.svg" alt="Instagram" width="40" height="40">
-            </a>
-            <a href="https://github.com/HVT-IAN">
-                <img src="https://cdn.svglogos.dev/logos/github-icon.svg" alt="GitHub" width="40" height="40">
-            </a>
-        </div>
-        <span class="lineaHorizontal"></span>
-        <span class="leyendaHorizontal">REDES SOCIALES</span>
-        <div class="menuPrincipal">
-            <nav id="menuOpciones">
-                <ul>
-                    <li>
-                        <a href="#panel-proyectos" style="text-decoration: none;"
-                            class="barraLlenado rotacion1">PROYECTOS</a>
-                    </li>
-                    <li>
-                        <a href="#panel-informacion" style="text-decoration: none;"
-                            class="barraLlenado rotacion2">INFORMACION</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <div class="gridOndas" aria-hidden="true"></div>
+
+    <!-- Barra fija: logo + navegacion por anclas (mueve el scroll) -->
+    <div class="barraNavegacion">
+        <a href="#inicio" class="logoFijo">IAN OSCANI</a>
+        <nav id="menuOpciones">
+            <ul>
+                <li><a href="#panel-proyectos" class="enlaceNav">PROYECTOS</a></li>
+                <li><a href="#panel-informacion" class="enlaceNav">INFO</a></li>
+                <li><a href="#panel-contacto" class="enlaceNav">CONTACTO</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <div class="contenedor-margenes" aria-hidden="true">
+        <div class="margenSuperior"></div>
+        <div class="margenInferior"></div>
+        <div class="margenIzquierdo"></div>
+        <div class="margenDerecho"></div>
+    </div>
+
+    <span class="lineaHorizontal" aria-hidden="true"></span>
+    <span class="leyendaHorizontal" aria-hidden="true">CONTACTAME</span>
+
+    <div class="iconosContacto">
+        <a href="https://www.instagram.com/hvtkndr_ian/" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.068 1.645.068 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+            </svg>
+        </a>
+        <a href="https://github.com/HVT-IAN" target="_blank" rel="noopener" aria-label="GitHub">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                    d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+            </svg>
+        </a>
+    </div>
+
+    <!-- Instrumentos del marco: contador, fase lunar y anotaciones tecnicas -->
+    <div class="contadorSeccion" aria-hidden="true">
+        <span id="contadorActual">01</span><span class="contadorTotal"> / 04</span>
+    </div>
+
+    <span class="leyendaSeccion" id="leyendaSeccion" aria-hidden="true">SEC.01 — PORTADA</span>
+    <span class="leyendaCoordenadas" aria-hidden="true">N 16.75° · W 93.10° — TUXTLA GTZ.</span>
+
+    <svg class="lunaFases" viewBox="0 0 40 40" aria-hidden="true">
+        <defs>
+            <mask id="mascaraLuna">
+                <rect width="40" height="40" fill="#ffffff"></rect>
+                <circle class="sombraLuna" cx="20" cy="20" r="20" fill="#000000"></circle>
+            </mask>
+        </defs>
+        <circle class="aroLuna" cx="20" cy="20" r="14" fill="none" stroke="#171717" stroke-width="1.5"></circle>
+        <circle class="cuerpoLuna" cx="20" cy="20" r="14" fill="#171717" mask="url(#mascaraLuna)"></circle>
+    </svg>
+
     <main>
-        <div class="contenedor-margenes">
-            <div class="margenSuperior"></div>
-            <div class="margenInferior"></div>
-            <div class="margenIzquierdo"></div>
-            <div class="margenDerecho"></div>
-        </div>
+        <!-- 1. Portada -->
+        <header class="cabecera" id="inicio">
+            <p class="estadoDisponibilidad"><span class="puntoEstado" aria-hidden="true"></span>Disponible
+                para prácticas y proyectos freelance</p>
+            <h1 class="FuenteTitulos">IAN OSCANI</h1>
+            <h3 class="subtituloTitulo">Desarrollador Frontend · Interfaces y experiencias web interactivas</h3>
+            <p class="ganchoHero">
+                Diseño y construyo sitios que se sienten vivos: interfaces claras,
+                animación con propósito y código limpio.
+            </p>
+            <div class="accionesHero">
+                <a href="#panel-proyectos" class="botonCTA">Ver proyectos</a>
+                <a href="#panel-contacto" class="botonCTA">Contáctame</a>
+            </div>
+        </header>
+
+        <!-- 2. Proyectos -->
         <section id="panel-proyectos">
+            <h2 class="tituloFantasma tituloFantasma--proyectos" aria-hidden="true">PROYECTOS</h2>
             <div class="contenedorProyectos">
                 <div class="listaProyectos">
                     <div class="itemBoton">
-                        <button class="botonProyectos active" data-titulo="DECO-ONE"
-                            data-fecha="Agosto-2026 / Dev: Front"
-                            data-descripcion="asdasdasdasdasdasdasdasdasdasdasdads" data-imagen="img/asdas.jpg">
+                        <button class="botonProyectos active" data-imagen="img/placeholder-proyecto.svg"
+                            data-repo="https://github.com/HVT-IAN">
                             DECO-ONE
                         </button>
-                        <h6>Agosto-2026 / Dev: Front</h6>
+                        <h6 class="fechaBoton">Agosto 2026 · Rol: Frontend</h6>
+                        <p class="descripcionBoton">Página web de renta de mobiliario y decoración para un negocio
+                            personal: catálogo visual, diseño responsive y secciones informativas pensadas para
+                            convertir visitas en cotizaciones.
+                        </p>
+                        <ul class="tagsProyecto">
+                            <li>HTML</li>
+                            <li>CSS</li>
+                            <li>JavaScript</li>
+                            <li>Responsive</li>
+                        </ul>
                     </div>
                     <div class="itemBoton">
-                        <button class="botonProyectos active" data-titulo="DECO-ONE"
-                            data-fecha="Agosto-2026 / Dev: Front"
-                            data-descripcion="asdasdasdasdasdasdasdasdasdasdasdads" data-imagen="img/asdas.jpg">
-                            DECO-ONE
+                        <button class="botonProyectos" data-imagen="img/placeholder-proyecto.svg"
+                            data-repo="https://github.com/HVT-IAN">
+                            MEDs
                         </button>
-                        <h6>Agosto-2026 / Dev: Front</h6>
+                        <h6 class="fechaBoton">Septiembre 2026 · Rol: Frontend / UX</h6>
+                        <p class="descripcionBoton">
+                            Aplicación móvil para la toma y control de medicamentos, pensada para personas con
+                            TDAH en distintos niveles: recordatorios claros, dosis y seguimiento diario.
+                        </p>
+                        <ul class="tagsProyecto">
+                            <li>App móvil</li>
+                            <li>UX</li>
+                            <li>Investigación</li>
+                        </ul>
+                    </div>
+                    <div class="itemBoton">
+                        <button class="botonProyectos" data-imagen="img/cover-portafolio.svg"
+                            data-repo="https://github.com/HVT-IAN">
+                            PORTAFOLIO
+                        </button>
+                        <h6 class="fechaBoton">Octubre 2026 · Rol: Frontend / 3D</h6>
+                        <p class="descripcionBoton">
+                            Sitio personal con escena WebGL construida a mano: figuras que hacen morph según
+                            la sección, scroll sincronizado con la cámara y marco instrumentado (fase lunar,
+                            contador de recorrido, progreso). Sin plantillas ni librerías de UI.
+                        </p>
+                        <ul class="tagsProyecto">
+                            <li>Three.js</li>
+                            <li>GSAP</li>
+                            <li>WebGL</li>
+                            <li>UI</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="proyectosDetalles">
-                    <img id="detalle-imagen">
-                    <h2 id="detalle-titulo">DECO-ONE</h2>
-                    <p id="detalle-descripcion">
-                        asdasdasdasdasdasdasdasdasdasdadasdasdasdasdasdasddadsasd
-                        adsasdasdasdasdasdasdddddddddddddddddddddddddddddddddddddddaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaddasdasdasdasdasdasdads
-                    </p>
+                    <img id="detalle-imagen" alt="">
+                    <h2 id="detalle-titulo"></h2>
+                    <h6 id="detalle-fecha"></h6>
+                    <p id="detalle-descripcion"></p>
+                    <ul id="detalle-tags" class="tagsProyecto"></ul>
+                    <a id="detalle-enlace" class="enlaceRepo" href="https://github.com/HVT-IAN" target="_blank"
+                        rel="noopener">Ver código →</a>
                 </div>
             </div>
         </section>
-        <h2 class="fuenteTituloSeccion">PROYECTOS</h2>
 
+        <!-- 3. Informacion -->
         <section id="panel-informacion">
+            <h2 class="tituloFantasma tituloFantasma--info" aria-hidden="true">INFO</h2>
             <div class="contenedor-informacion">
-                <h2 class="fuenteSecundaria">BIO</h2>
-                <p class="SeccionInformacion">Mi nombre es Ian soy estudiante de la Universidad Politecnica de
-                    Chiapas
-                    en la carrera de ingenieria
-                    de
-                    software</p>
-                <p class="SeccionInformacion">Me gusta diseñar interfaces, crear experiencias visuales y
-                    desarrollar
-                    soluciones inovadoras,
-                    actualmente
-                    me encuentro explorando el mundo del desarrollo web, me gusta aprender nuevas tecnologias y
-                    aplicarlas
-                    en mis proyectos.</p>
-                <img src="img/placeholder-foto.svg" alt="Espacio reservado para la foto" width="200" height="200">
+                <h2 class="fuenteSecundaria">SOBRE MÍ</h2>
+                <p class="SeccionInformacion">Soy Ian, estudiante de Ingeniería en Software en la Universidad
+                    Politecnica de Chiapas y desarrollador frontend. Construyo interfaces centradas en el usuario:
+                    sitios responsive, animación con propósito y detalles pulidos de principio a fin.</p>
+                <p class="SeccionInformacion">Aprendo herramientas nuevas y las aplico de inmediato en proyectos
+                    reales.</p>
+                <h3 class="tituloTecnologias">LO QUE USO</h3>
+                <div class="gruposTecnologias">
+                    <div class="grupoTecnologia">
+                        <h4>FRONTEND</h4>
+                        <ul class="listaTecnologias">
+                            <li><img class="iconoTecnologia" src="img/html5.svg" alt="HTML5" width="40" height="40">
+                            </li>
+                            <li><img class="iconoTecnologia" src="img/css3.svg" alt="CSS3" width="40" height="40"></li>
+                            <li><img class="iconoTecnologia" src="img/javascript.svg" alt="JavaScript" width="40"
+                                    height="40"></li>
+                        </ul>
+                    </div>
+                    <div class="grupoTecnologia">
+                        <h4>3D / MOTION</h4>
+                        <ul class="listaTecnologias">
+                            <li class="chipTech">Three.js</li>
+                            <li class="chipTech">GSAP</li>
+                        </ul>
+                    </div>
+                    <div class="grupoTecnologia">
+                        <h4>OTROS</h4>
+                        <ul class="listaTecnologias">
+                            <li><img class="iconoTecnologia" src="img/cpp.svg" alt="C++" width="40" height="40"></li>
+                            <li class="chipTech">Git</li>
+                        </ul>
+                    </div>
+                </div>
+                <img class="fotoPerfil" src="img/yomerengues.jpeg" alt="Ian Oscani" width="200" height="200">
             </div>
         </section>
-        <h2 class="fuenteTituloSeccion2">INFO</h2>
+
+        <!-- 4. Contacto -->
+        <section id="panel-contacto">
+            <h2 class="tituloFantasma tituloFantasma--contacto" aria-hidden="true">CONTACTO</h2>
+            <div class="contenedorContacto">
+                <h2 class="fuenteSecundaria">¿Tienes un proyecto en mente?</h2>
+                <p class="SeccionInformacion">Escríbeme y lo construimos.</p>
+                <form id="form-contacto" class="formularioContacto" novalidate>
+                    <div class="campo">
+                        <label for="contact-name">Nombre</label>
+                        <input type="text" id="contact-name" name="name" required maxlength="120">
+                    </div>
+                    <div class="campo">
+                        <label for="contact-email">Email</label>
+                        <input type="email" id="contact-email" name="email" required>
+                    </div>
+                    <div class="campo">
+                        <label for="contact-message">Mensaje</label>
+                        <textarea id="contact-message" name="message" rows="5" required maxlength="4000"></textarea>
+                    </div>
+                    <!-- Honeypot (oculto para bots) -->
+                    <input type="hidden" name="website" value="" tabindex="-1" autocomplete="off">
+                    <button type="submit" class="botonCTA">Enviar mensaje</button>
+                </form>
+                <div class="grupoContacto">
+                    <!-- TODO: sustituir por el correo real -->
+                    <a href="mailto:tu-correo@ejemplo.com" class="botonCTA">
+                        <svg class="iconoRed" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+                        </svg>Email
+                    </a>
+                    <a href="https://github.com/HVT-IAN" class="botonCTA" target="_blank" rel="noopener">
+                        <svg class="iconoRed" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                        </svg>GitHub
+                    </a>
+                    <a href="https://www.instagram.com/hvtkndr_ian/" class="botonCTA" target="_blank" rel="noopener">
+                        <svg class="iconoRed" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.068 1.645.068 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zm0 10.162a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+                        </svg>Instagram
+                    </a>
+                    <!-- TODO: sustituir por la URL real de LinkedIn -->
+                    <a href="https://www.linkedin.com/in/ian-oscani" class="botonCTA" target="_blank" rel="noopener">
+                        <svg class="iconoRed" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>LinkedIn
+                    </a>
+                </div>
+            </div>
+        </section>
 
     </main>
-
-    <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
-    <!-- Tres.js r128. Ya no hace falta GSAP: el morph y el dolly los lleva el
-         scroll con interpolacion propia, y en los scripts no queda ninguna
-         referencia a gsap. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="JavaScript/three.js"></script>
     <script src="JavaScript/script.js"></script>

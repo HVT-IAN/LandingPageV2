@@ -148,7 +148,11 @@ const detalleEnlace = document.getElementById("detalle-enlace");
 const REPO_POR_DEFECTO = "https://github.com/HVT-IAN";
 
 function mostrarProyecto(boton) {
-  for (const b of getBotonesProyecto()) b.classList.toggle("active", b === boton);
+  for (const b of getBotonesProyecto()) {
+    const activo = b === boton;
+    b.classList.toggle("active", activo);
+    b.setAttribute("aria-pressed", activo ? "true" : "false");
+  }
 
   const bloque = boton.closest(".itemBoton");
   const fecha = bloque && bloque.querySelector(".fechaBoton");
@@ -244,134 +248,389 @@ const ctaSecondary = document.querySelector("#inicio .accionesHero a:last-child"
 const contactTitle = document.querySelector("#panel-contacto h2.fuenteSecundaria");
 const contactText = document.querySelector("#panel-contacto p.SeccionInformacion");
 
-function aplicarSettings(s) {
-  if (!s) return;
-  if (s.heroTitle) heroTitle.textContent = s.heroTitle;
-  if (s.heroSubtitle) heroSubtitle.textContent = s.heroSubtitle;
-  if (s.heroHook) heroHook.textContent = s.heroHook;
-  if (s.availability) availability.textContent = s.availability;
-  if (s.ctaPrimary) ctaPrimary.textContent = s.ctaPrimary;
-  if (s.ctaSecondary) ctaSecondary.textContent = s.ctaSecondary;
-  if (s.contactTitle) contactTitle.textContent = s.contactTitle;
-  if (s.contactText) contactText.textContent = s.contactText;
-}
+// ===== Caché local y pantalla de carga =====
+const CACHE_KEY = "actmijangos:landing:v1";
+const CACHE_VERSION = 1;
 
-// Carga datos de la API y pinta la página
-async function cargarDatosIniciales() {
+const pantallaCarga = document.getElementById("pantallaCarga");
+const pantallaCargaTexto = document.getElementById("pantallaCargaTexto");
+const pantallaCargaError = document.getElementById("pantallaCargaError");
+const reintentarCarga = document.getElementById("reintentarCarga");
+const contenidoPrincipal = document.querySelector("main");
+const barraNavegacion = document.querySelector(".barraNavegacion");
+const iconosContacto = document.querySelector(".iconosContacto");
+
+let cargaEnCurso = false;
+let landingIniciada = false;
+let temporizadorAviso = null;
+
+function leerCache() {
   try {
-    const respuesta = await fetch(API_BASE + "/landing");
-    if (!respuesta.ok) throw new Error("Error " + respuesta.status);
-    const datos = await respuesta.json();
-
-    // 1. Proyectos
-    if (datos.projects && datos.projects.length) {
-      pintarProyectos(datos.projects);
-    }
-
-    // 2. Tecnologías (skillGroups)
-    if (datos.skillGroups && datos.skillGroups.length) {
-      pintarTecnologias(datos.skillGroups);
-    }
-    // 3. Redes sociales
-    if (datos.socialLinks && datos.socialLinks.length) {
-      pintarRedes(datos.socialLinks);
-    }
-    // 4. Hero / settings dinámicos
-    if (datos.settings) {
-      aplicarSettings(datos.settings);
-    }
-    // 5. Formulario de contacto (se engancha al final para asegurar que el DOM existe)
-    initFormularioContacto();
-  } catch (e) {
-    console.error("No se pudo cargar la API:", e);
-    // Si falla, la página sigue funcionando con el HTML hardcodeado
-    initFormularioContacto(); // también intentamos enganchar el form aunque falle la API
+    const crudo = localStorage.getItem(CACHE_KEY);
+    if (!crudo) return null;
+    const guardado = JSON.parse(crudo);
+    if (!guardado || guardado.version !== CACHE_VERSION || !guardado.data) return null;
+    return guardado.data;
+  } catch (error) {
+    return null;
   }
 }
 
-document.addEventListener("DOMContentLoaded", cargarDatosIniciales);
+function guardarCache(datos) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      version: CACHE_VERSION,
+      guardadoEn: Date.now(),
+      data: datos
+    }));
+  } catch (error) {
+    // localStorage puede estar lleno o bloqueado (modo privado).
+  }
+}
+
+function bloquearContenido(bloqueado) {
+  [contenidoPrincipal, barraNavegacion, iconosContacto].forEach((elemento) => {
+    if (!elemento) return;
+    if ("inert" in elemento) elemento.inert = bloqueado;
+  });
+}
+
+function iniciarPantallaCarga() {
+  document.documentElement.classList.add("cargando");
+  bloquearContenido(true);
+  pantallaCarga?.classList.remove("pantallaCarga--error");
+
+  if (pantallaCargaTexto) {
+    pantallaCargaTexto.textContent = "Cargando contenido";
+  }
+  if (pantallaCargaError) {
+    pantallaCargaError.hidden = true;
+    pantallaCargaError.textContent = "";
+  }
+  if (reintentarCarga) {
+    reintentarCarga.hidden = true;
+  }
+
+  clearTimeout(temporizadorAviso);
+  temporizadorAviso = setTimeout(() => {
+    if (document.documentElement.classList.contains("cargando") && pantallaCargaTexto) {
+      pantallaCargaTexto.textContent = "El servidor está despertando. Puede tardar hasta un minuto.";
+    }
+  }, 8000);
+}
+
+function terminarPantallaCarga() {
+  clearTimeout(temporizadorAviso);
+  document.documentElement.classList.remove("cargando");
+  bloquearContenido(false);
+}
+
+function mostrarErrorCarga(mensaje) {
+  clearTimeout(temporizadorAviso);
+  document.documentElement.classList.add("cargando");
+  bloquearContenido(true);
+  pantallaCarga?.classList.add("pantallaCarga--error");
+
+  if (pantallaCargaTexto) {
+    pantallaCargaTexto.textContent = "No se pudo cargar el contenido";
+  }
+  if (pantallaCargaError) {
+    pantallaCargaError.textContent = mensaje;
+    pantallaCargaError.hidden = false;
+  }
+  if (reintentarCarga) {
+    reintentarCarga.hidden = false;
+  }
+}
+
+// ===== Settings / SEO =====
+function aplicarSettings(s) {
+  if (!s) return;
+
+  if (s.heroTitle && heroTitle) heroTitle.textContent = s.heroTitle;
+  if (s.heroSubtitle && heroSubtitle) heroSubtitle.textContent = s.heroSubtitle;
+  if (s.heroHook && heroHook) heroHook.textContent = s.heroHook;
+  if (s.availability && availability) {
+    availability.textContent = "";
+    const punto = document.createElement("span");
+    punto.className = "puntoEstado";
+    punto.setAttribute("aria-hidden", "true");
+    availability.append(punto, document.createTextNode(s.availability));
+  }
+  if (s.ctaPrimary && ctaPrimary) ctaPrimary.textContent = s.ctaPrimary;
+  if (s.ctaSecondary && ctaSecondary) ctaSecondary.textContent = s.ctaSecondary;
+  if (s.contactTitle && contactTitle) contactTitle.textContent = s.contactTitle;
+  if (s.contactText && contactText) contactText.textContent = s.contactText;
+
+  if (s.contactEmail) {
+    document.querySelectorAll('a[href^="mailto:"]').forEach((enlace) => {
+      enlace.href = "mailto:" + s.contactEmail;
+      enlace.style.display = "";
+    });
+  }
+
+  if (s.seoTitle) {
+    document.title = s.seoTitle;
+  }
+
+  if (s.metaDescription) {
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+    meta.content = s.metaDescription;
+  }
+
+  if (s.faviconUrl) {
+    const icono = document.querySelector('link[rel="icon"]');
+    if (icono) icono.href = s.faviconUrl;
+  }
+
+  if (s.frameText) {
+    const leyenda = document.querySelector(".leyendaHorizontal");
+    if (leyenda) leyenda.textContent = s.frameText;
+  }
+
+  if (s.latitude || s.longitude) {
+    const coordenadas = document.querySelector(".leyendaCoordenadas");
+    if (coordenadas) {
+      const partes = [];
+      if (s.latitude) partes.push("N " + s.latitude + "°");
+      if (s.longitude) partes.push("W " + s.longitude + "°");
+      if (partes.length) coordenadas.textContent = partes.join(" · ") + " — TUXTLA GTZ.";
+    }
+  }
+}
+
+// ===== Renderizado completo =====
+function aplicarDatos(datos) {
+  if (!datos || typeof datos !== "object") return;
+
+  if (Array.isArray(datos.projects)) pintarProyectos(datos.projects);
+  if (Array.isArray(datos.skillGroups)) pintarTecnologias(datos.skillGroups);
+  if (datos.about) pintarAbout(datos.about);
+  if (Array.isArray(datos.socialLinks)) pintarRedes(datos.socialLinks);
+  if (datos.settings) aplicarSettings(datos.settings);
+
+  // El contenido cambió de altura: recalcular posiciones para el scroll
+  // y el morphing de Three.js.
+  requestAnimationFrame(() => {
+    medir();
+    actualizar();
+  });
+}
+
+// ===== Carga de datos: caché primero, luego red =====
+const TIEMPO_MAXIMO_PETICION = 70000; // Render free puede tardar ~50 s en despertar
+
+async function pedirLanding() {
+  const controlador = new AbortController();
+  const limite = setTimeout(() => controlador.abort(), TIEMPO_MAXIMO_PETICION);
+
+  try {
+    const respuesta = await fetch(API_BASE + "/landing", {
+      signal: controlador.signal,
+      headers: { Accept: "application/json" }
+    });
+    if (!respuesta.ok) throw new Error("Error " + respuesta.status);
+    return await respuesta.json();
+  } finally {
+    clearTimeout(limite);
+  }
+}
+
+async function cargarDatosIniciales() {
+  if (cargaEnCurso) return;
+
+  const cache = leerCache();
+  if (cache) {
+    // Recarga: mostramos al instante el último contenido válido y luego
+    // revalidamos contra la API sin volver a tapar la página.
+    try {
+      aplicarDatos(cache);
+    } catch (error) {
+      console.error("La caché local no se pudo pintar:", error);
+    }
+    terminarPantallaCarga();
+  } else {
+    iniciarPantallaCarga();
+  }
+
+  cargaEnCurso = true;
+
+  try {
+    const datos = await pedirLanding();
+    aplicarDatos(datos);
+    guardarCache(datos);
+    terminarPantallaCarga();
+  } catch (error) {
+    console.error("No se pudo cargar la API:", error);
+
+    if (cache) {
+      // Ya hay contenido válido en pantalla: se conserva la caché.
+      terminarPantallaCarga();
+    } else {
+      mostrarErrorCarga(
+        error.name === "AbortError"
+          ? "La conexión tardó demasiado. Revisa tu internet e inténtalo de nuevo."
+          : "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo."
+      );
+    }
+  } finally {
+    cargaEnCurso = false;
+  }
+}
+
+function iniciarLanding() {
+  if (landingIniciada) return;
+  landingIniciada = true;
+
+  // El formulario se engancha de inmediato, sin esperar a la API.
+  initFormularioContacto();
+
+  // Si una imagen dinámica cambia la altura del contenido, recalcular el
+  // scroll y la mezcla de Three.js.
+  document.querySelectorAll("#detalle-imagen, #about-foto").forEach((imagen) => {
+    imagen.addEventListener("load", () => {
+      medir();
+      actualizar();
+    });
+  });
+
+  reintentarCarga?.addEventListener("click", () => {
+    if (cargaEnCurso) return;
+    iniciarPantallaCarga();
+    cargarDatosIniciales();
+  });
+
+  cargarDatosIniciales();
+}
+
+function limpiarDetalleProyecto() {
+  if (detalleTitulo) detalleTitulo.textContent = "";
+  if (detalleFecha) detalleFecha.textContent = "";
+  if (detalleDescripcion) detalleDescripcion.textContent = "";
+  if (detalleTags) detalleTags.textContent = "";
+  if (detalleImagen) {
+    detalleImagen.removeAttribute("src");
+    detalleImagen.alt = "";
+    detalleImagen.hidden = true;
+  }
+  if (detalleEnlace) detalleEnlace.hidden = true;
+}
 
 function pintarProyectos(proyectos) {
   // El contenedor real en el HTML: .listaProyectos
   const contenedor = document.querySelector(".listaProyectos");
   if (!contenedor) return;
 
-  // DEBUG: ver qué llega de la API
-  console.log("🔍 pintarProyectos recibido:", proyectos);
+  const panelDetalles = document.querySelector(".proyectosDetalles");
+  const lista = Array.isArray(proyectos) ? proyectos : [];
 
-  // Si no hay proyectos publicados, NO vaciamos el contenedor (deja los hardcodeados)
-  if (!proyectos || !proyectos.length) {
-    console.warn("⚠️ No hay proyectos publicados — manteniendo hardcodeados");
+  // La API es la fuente de verdad: se vacía el HTML hardcodeado incluso
+  // cuando no hay proyectos publicados.
+  contenedor.textContent = "";
+
+  if (!lista.length) {
+    const vacio = document.createElement("p");
+    vacio.className = "SeccionInformacion";
+    vacio.textContent = "Todavía no hay proyectos publicados.";
+    contenedor.appendChild(vacio);
+    if (panelDetalles) panelDetalles.style.display = "none";
+    limpiarDetalleProyecto();
     return;
   }
 
-  // Guardamos el primer botón para marcarlo active
+  if (panelDetalles) panelDetalles.style.display = "";
+
   let primerBoton = null;
 
-  // Vaciamos el contenedor (borra los botones hardcodeados)
-  contenedor.innerHTML = "";
-
-  proyectos.forEach((p, i) => {
-    // Creamos la estructura que tu CSS/JS espera:
-    // <div class="itemBoton">
-    //   <button class="botonProyectos" data-imagen="..." data-repo="...">Título</button>
-    //   <h6 class="fechaBoton">Fecha</h6>
-    //   <p class="descripcionBoton">Descripción</p>
-    //   <ul class="tagsProyecto"><li>Tag1</li>...</ul>
-    // </div>
-
+  lista.forEach((proyecto, i) => {
     const item = document.createElement("div");
     item.className = "itemBoton";
 
     const btn = document.createElement("button");
+    btn.type = "button";
     btn.className = "botonProyectos";
-    btn.textContent = p.title;
-    btn.dataset.imagen = p.image?.url || "";
-    btn.dataset.repo = p.repoUrl || "https://github.com/HVT-IAN";
-    if (i === 0) btn.classList.add("active"); // el primero active
-    if (i === 0) primerBoton = btn;
+    btn.textContent = proyecto?.title || "Proyecto " + (i + 1);
+    btn.dataset.imagen = proyecto?.image?.url || "img/placeholder-proyecto.svg";
+    btn.dataset.repo = proyecto?.repoUrl || "";
+    btn.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    btn.addEventListener("click", () => mostrarProyecto(btn));
+
+    if (i === 0) {
+      btn.classList.add("active");
+      primerBoton = btn;
+    }
 
     const fecha = document.createElement("h6");
     fecha.className = "fechaBoton";
-    fecha.textContent = p.dateLabel || "";
+    const partesFecha = [];
+    if (proyecto?.dateLabel) partesFecha.push(proyecto.dateLabel);
+    if (proyecto?.role) partesFecha.push("Rol: " + proyecto.role);
+    fecha.textContent = partesFecha.join(" · ");
 
     const desc = document.createElement("p");
     desc.className = "descripcionBoton";
-    desc.textContent = p.description || "";
+    desc.textContent = proyecto?.description || "";
 
     const tagsUl = document.createElement("ul");
     tagsUl.className = "tagsProyecto";
-    (p.tags || []).forEach(t => {
+    const tags = Array.isArray(proyecto?.tags) ? proyecto.tags : [];
+    tags.forEach((tag) => {
       const li = document.createElement("li");
-      li.textContent = t;
+      li.textContent = String(tag);
       tagsUl.appendChild(li);
     });
 
-    item.append(btn, fecha, desc, tagsUl);
+    item.append(btn, fecha, desc);
+    if (tagsUl.childElementCount) item.appendChild(tagsUl);
     contenedor.appendChild(item);
   });
 
-  // Re-enganchar los eventos click a los NUEVOS botones
-  const nuevosBotones = [...document.querySelectorAll(".botonProyectos")];
-  nuevosBotones.forEach(b => {
-    b.addEventListener("click", () => mostrarProyecto(b));
-  });
-
-  // Mostrar el primero (reutiliza tu función existente)
+  if (detalleEnlace) detalleEnlace.hidden = false;
   if (primerBoton) mostrarProyecto(primerBoton);
 }
+
+const ICONOS_TECNOLOGIA = {
+  html: "html5.svg",
+  html5: "html5.svg",
+  css: "css3.svg",
+  css3: "css3.svg",
+  javascript: "javascript.svg",
+  js: "javascript.svg",
+  "c++": "cpp.svg",
+  cpp: "cpp.svg"
+};
 
 function pintarTecnologias(grupos) {
   // Contenedor real en el HTML: .gruposTecnologias
   const contenedor = document.querySelector(".gruposTecnologias");
   if (!contenedor) return;
 
-  contenedor.innerHTML = "";
+  const lista = Array.isArray(grupos) ? grupos : [];
+  const gruposValidos = lista
+    .map((grupo) => ({
+      name: String(grupo?.name || "").trim(),
+      skills: (Array.isArray(grupo?.skills) ? grupo.skills : [])
+        .map((skill) => String(skill || "").trim())
+        .filter(Boolean)
+    }))
+    .filter((grupo) => grupo.name && grupo.skills.length);
 
-  // Skills que tienen archivo SVG en /img/
-  const skillsConIcono = ["html", "css", "javascript", "cpp", "c++", "python", "react", "vue", "tailwind", "typescript", "node", "git"];
+  contenedor.textContent = "";
 
-  grupos.forEach(grupo => {
+  if (!gruposValidos.length) {
+    const vacio = document.createElement("p");
+    vacio.className = "SeccionInformacion";
+    vacio.textContent = "Todavía no hay tecnologías publicadas.";
+    contenedor.appendChild(vacio);
+    return;
+  }
+
+  gruposValidos.forEach((grupo) => {
     const grupoDiv = document.createElement("div");
     grupoDiv.className = "grupoTecnologia";
 
@@ -382,28 +641,18 @@ function pintarTecnologias(grupos) {
     const ul = document.createElement("ul");
     ul.className = "listaTecnologias";
 
-    grupo.skills.forEach(skill => {
+    grupo.skills.forEach((skill) => {
       const li = document.createElement("li");
-      const skillLower = skill.toLowerCase();
-      const tieneIcono = skillsConIcono.some(s => skillLower.includes(s));
+      const archivo = ICONOS_TECNOLOGIA[skill.toLowerCase()];
 
-      if (tieneIcono) {
+      if (archivo) {
         const img = document.createElement("img");
         img.className = "iconoTecnologia";
+        img.src = "img/" + archivo;
         img.alt = skill;
         img.width = 40;
         img.height = 40;
-        // Mapea nombre a archivo SVG en /img/
-        let archivo = skillLower
-          .replace("c++", "cpp")
-          .replace("c#", "csharp")
-          .replace(" ", "-")
-          .replace(".", "") + ".svg";
-        // Casos especiales
-        if (skillLower === "html") archivo = "html5.svg";
-        if (skillLower === "css") archivo = "css3.svg";
-        if (skillLower === "javascript" || skillLower === "js") archivo = "javascript.svg";
-        img.src = "img/" + archivo;
+        img.loading = "lazy";
         li.appendChild(img);
       } else {
         li.className = "chipTech";
@@ -415,6 +664,42 @@ function pintarTecnologias(grupos) {
     grupoDiv.appendChild(ul);
     contenedor.appendChild(grupoDiv);
   });
+}
+
+function pintarAbout(about) {
+  const contenedor = document.getElementById("about-parrafos");
+  const foto = document.getElementById("about-foto");
+
+  if (contenedor) {
+    const parrafos = (Array.isArray(about?.paragraphs) ? about.paragraphs : [])
+      .map((texto) => String(texto || "").trim())
+      .filter(Boolean);
+
+    contenedor.textContent = "";
+    parrafos.forEach((texto) => {
+      const p = document.createElement("p");
+      p.className = "SeccionInformacion";
+      p.textContent = texto;
+      contenedor.appendChild(p);
+    });
+    contenedor.hidden = parrafos.length === 0;
+  }
+
+  if (foto) {
+    if (about?.photo?.alt) foto.alt = about.photo.alt;
+    const url = String(about?.photo?.url || "").trim();
+    const destino = url || "img/yomerengues.jpeg";
+    foto.onerror = null;
+    if (foto.getAttribute("src") !== destino) {
+      foto.src = destino;
+    }
+    if (url) {
+      foto.onerror = () => {
+        foto.onerror = null;
+        foto.src = "img/yomerengues.jpeg";
+      };
+    }
+  }
 }
 
 function pintarRedes(redes) {
@@ -431,62 +716,121 @@ function pintarRedes(redes) {
     instagram: '.iconosContacto a[href*="instagram"]'
   };
 
-  redes.forEach(r => {
-    const platform = r.platform.toLowerCase();
-
-    // Actualiza botones en la sección Contacto
-    const selContacto = mapaContacto[platform];
-    if (selContacto) {
-      const a = document.querySelector(selContacto);
-      if (a) a.href = r.url;
-    }
-
-    // Actualiza iconos fijos en la barra superior
-    const selFijo = mapaFijo[platform];
-    if (selFijo) {
-      const a = document.querySelector(selFijo);
-      if (a) a.href = r.url;
-    }
+  const enlaces = new Map();
+  (Array.isArray(redes) ? redes : []).forEach((red) => {
+    const platform = String(red?.platform || "").trim().toLowerCase();
+    const url = String(red?.url || "").trim();
+    if (platform && url) enlaces.set(platform, url);
   });
+
+  const aplicarMapa = (mapa) => {
+    Object.entries(mapa).forEach(([platform, selector]) => {
+      const enlace = document.querySelector(selector);
+      if (!enlace) return;
+      const url = enlaces.get(platform);
+      if (url) {
+        enlace.href = url;
+        enlace.style.display = "";
+      } else {
+        enlace.style.display = "none";
+      }
+    });
+  };
+
+  aplicarMapa(mapaContacto);
+  aplicarMapa(mapaFijo);
 }
 
-// Inicializa el formulario de contacto (se llama tras cargar la API)
+// Inicializa el formulario de contacto. Se llama al arrancar la landing,
+// sin esperar a que responda la API.
 function initFormularioContacto() {
   const formContacto = document.querySelector("#form-contacto");
-  if (!formContacto) return;
+  if (!formContacto || formContacto.dataset.inicializado === "true") return;
+  formContacto.dataset.inicializado = "true";
+
+  const boton = formContacto.querySelector('button[type="submit"]');
 
   formContacto.addEventListener("submit", async (e) => {
     e.preventDefault(); // evita recarga / envío por GET
 
-    const btn = formContacto.querySelector('button[type="submit"]');
-    const textoOriginal = btn?.textContent;
-    btn && (btn.disabled = true, btn.textContent = "Enviando...");
+    const valor = (nombre) => {
+      const campo = formContacto.elements.namedItem(nombre);
+      return campo && "value" in campo ? campo.value.trim() : "";
+    };
 
     const data = {
-      name: formContacto.name?.value?.trim() || "",
-      email: formContacto.email?.value?.trim() || "",
-      message: formContacto.message?.value?.trim() || "",
-      website: "" // honeypot vacío
+      name: valor("name"),
+      email: valor("email"),
+      message: valor("message"),
+      website: valor("website")
     };
+
+    if (!data.name || !data.email || !data.message) {
+      alert("Completa tu nombre, email y mensaje.");
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      alert("Escribe un email válido.");
+      return;
+    }
+
+    const textoOriginal = boton?.textContent || "Enviar mensaje";
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Enviando...";
+    }
 
     try {
       const resp = await fetch(API_BASE + "/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(data)
       });
-      const resultado = await resp.json();
-      if (resultado.ok) {
+
+      let resultado = null;
+      try {
+        resultado = await resp.json();
+      } catch (error) {
+        resultado = null;
+      }
+
+      if (!resp.ok) {
+        const detalle = resultado?.detail;
+        let mensaje = "No se pudo enviar. Inténtalo de nuevo.";
+        if (typeof detalle === "string") {
+          mensaje = detalle;
+        } else if (Array.isArray(detalle) && detalle[0]?.msg) {
+          mensaje = detalle[0].msg;
+        } else if (resp.status === 429) {
+          mensaje = "Demasiados envíos. Inténtalo más tarde.";
+        }
+        alert("❌ " + mensaje);
+        return;
+      }
+
+      if (resultado?.ok) {
         alert("✅ Mensaje enviado correctamente");
         formContacto.reset();
       } else {
-        alert("❌ Error: " + (resultado.detail || "Intenta de nuevo"));
+        alert("❌ No se pudo enviar. Inténtalo de nuevo.");
       }
     } catch (err) {
       console.error(err);
       alert("❌ No se pudo conectar con el servidor");
     } finally {
-      btn && (btn.disabled = false, btn.textContent = textoOriginal);
+      if (boton) {
+        boton.disabled = false;
+        boton.textContent = textoOriginal;
+      }
     }
   });
+}
+
+// Arranque: se declara al final para que todas las constantes y funciones
+// estén inicializadas antes de pintar la primera respuesta.
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", iniciarLanding);
+} else {
+  iniciarLanding();
 }

@@ -19,9 +19,27 @@
         rel="stylesheet">
     <link rel="stylesheet" href="Css/three.css">
     <link rel="stylesheet" href="Css/querysMovil.css">
+    <link rel="stylesheet" href="Css/carga.css">
+    <script>
+        // Se ejecuta antes de pintar el body: evita el flash de contenido
+        // hardcodeado mientras la API responde. Sin JS, el fallback se ve.
+        document.documentElement.classList.add("cargando");
+    </script>
 </head>
 
 <body>
+    <!-- Pantalla de carga: cubre el contenido hardcodeado hasta que la API
+         responde o hasta que se muestra el error con opción de reintentar. -->
+    <div id="pantallaCarga" class="pantallaCarga" role="status" aria-live="polite"
+        aria-label="Cargando contenido">
+        <div class="pantallaCarga__marca" aria-hidden="true">IAN OSCANI</div>
+        <p class="pantallaCarga__texto" id="pantallaCargaTexto">Cargando contenido</p>
+        <div class="pantallaCarga__barra" aria-hidden="true"><span></span></div>
+        <p class="pantallaCarga__error" id="pantallaCargaError" hidden></p>
+        <button type="button" class="pantallaCarga__reintentar" id="reintentarCarga"
+            hidden>Reintentar</button>
+    </div>
+
     <canvas id="escena3d"></canvas>
     <div class="gridOndas" aria-hidden="true"></div>
 
@@ -172,11 +190,13 @@
             <h2 class="tituloFantasma tituloFantasma--info" aria-hidden="true">INFO</h2>
             <div class="contenedor-informacion">
                 <h2 class="fuenteSecundaria">SOBRE MÍ</h2>
-                <p class="SeccionInformacion">Soy Ian, estudiante de Ingeniería en Software en la Universidad
-                    Politecnica de Chiapas y desarrollador frontend. Construyo interfaces centradas en el usuario:
-                    sitios responsive, animación con propósito y detalles pulidos de principio a fin.</p>
-                <p class="SeccionInformacion">Aprendo herramientas nuevas y las aplico de inmediato en proyectos
-                    reales.</p>
+                <div id="about-parrafos" class="aboutParrafos">
+                    <p class="SeccionInformacion">Soy Ian, estudiante de Ingeniería en Software en la Universidad
+                        Politecnica de Chiapas y desarrollador frontend. Construyo interfaces centradas en el usuario:
+                        sitios responsive, animación con propósito y detalles pulidos de principio a fin.</p>
+                    <p class="SeccionInformacion">Aprendo herramientas nuevas y las aplico de inmediato en proyectos
+                        reales.</p>
+                </div>
                 <h3 class="tituloTecnologias">LO QUE USO</h3>
                 <div class="gruposTecnologias">
                     <div class="grupoTecnologia">
@@ -204,7 +224,8 @@
                         </ul>
                     </div>
                 </div>
-                <img class="fotoPerfil" src="img/yomerengues.jpeg" alt="Ian Oscani" width="200" height="200">
+                <img id="about-foto" class="fotoPerfil" src="img/yomerengues.jpeg" alt="Ian Oscani" width="200"
+                    height="200">
             </div>
         </section>
 
@@ -232,8 +253,7 @@
                     <button type="submit" class="botonCTA">Enviar mensaje</button>
                 </form>
                 <div class="grupoContacto">
-                    <!-- TODO: sustituir por el correo real -->
-                    <a href="mailto:tu-correo@ejemplo.com" class="botonCTA">
+                    <a href="mailto:ian22032007@gmail.com" class="botonCTA">
                         <svg class="iconoRed" viewBox="0 0 24 24" aria-hidden="true">
                             <path
                                 d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
@@ -266,7 +286,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="JavaScript/three.js"></script>
-    <script src="JavaScript/script.js"></script>
+    <script src="JavaScript/script.js"
+        onerror="document.documentElement.classList.remove('cargando')"></script>
 
 </body>
 

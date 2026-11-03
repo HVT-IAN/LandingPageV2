@@ -1,0 +1,154 @@
+/* ===== Pantalla de carga ===== */
+/* Cubre el contenido hardcodeado mientras la API responde. La clase
+   .cargando la agrega un script inline en el <head>, así que si JavaScript
+   está desactivado la pantalla nunca aparece y se ve el fallback del HTML. */
+
+.pantallaCarga {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px;
+    background-color: var(--fondo);
+    color: var(--texto);
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.35s ease, visibility 0s linear 0.35s;
+}
+
+html.cargando .pantallaCarga {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.35s ease, visibility 0s linear 0s;
+}
+
+html.cargando,
+html.cargando body {
+    overflow: hidden;
+}
+
+.pantallaCarga__marca {
+    font-family: "Poppins", sans-serif;
+    font-size: clamp(30px, 6vw, 58px);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    color: var(--texto);
+}
+
+.pantallaCarga__texto {
+    margin: 0;
+    max-width: 460px;
+    font-family: var(--fuenteTecnica);
+    font-size: 11px;
+    line-height: 1.7;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--textoTenue);
+}
+
+.pantallaCarga__barra {
+    width: min(220px, 70vw);
+    height: 1px;
+    overflow: hidden;
+    background-color: var(--linea);
+}
+
+.pantallaCarga__barra span {
+    display: block;
+    width: 38%;
+    height: 100%;
+    background-color: var(--texto);
+    animation: cargaBarra 1.2s ease-in-out infinite;
+}
+
+@keyframes cargaBarra {
+    0% {
+        transform: translateX(-110%);
+    }
+
+    100% {
+        transform: translateX(370%);
+    }
+}
+
+.pantallaCarga__error {
+    margin: 4px 0 0;
+    max-width: 440px;
+    font-family: "Montserrat", sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.6;
+    color: var(--textoTenue);
+}
+
+.pantallaCarga__reintentar {
+    margin-top: 6px;
+    padding: 12px 22px;
+    border: 1px solid var(--texto);
+    background: transparent;
+    color: var(--texto);
+    font-family: var(--fuenteTecnica);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.pantallaCarga__reintentar:hover {
+    background-color: var(--texto);
+    color: var(--fondo);
+}
+
+.pantallaCarga__reintentar:focus-visible {
+    outline: 2px solid var(--texto);
+    outline-offset: 4px;
+}
+
+.pantallaCarga__error[hidden],
+.pantallaCarga__reintentar[hidden] {
+    display: none !important;
+}
+
+.pantallaCarga--error .pantallaCarga__barra {
+    display: none;
+}
+
+.pantallaCarga--error .pantallaCarga__texto {
+    color: var(--texto);
+}
+
+@media (max-width: 768px) {
+    .pantallaCarga {
+        gap: 14px;
+        padding: 18px;
+    }
+
+    .pantallaCarga__marca {
+        font-size: 30px;
+    }
+
+    .pantallaCarga__texto {
+        font-size: 10px;
+        letter-spacing: 0.12em;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pantallaCarga {
+        transition: none;
+    }
+
+    .pantallaCarga__barra span {
+        animation: none;
+        width: 100%;
+    }
+}

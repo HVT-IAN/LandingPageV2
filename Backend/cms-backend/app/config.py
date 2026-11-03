@@ -1,4 +1,5 @@
 from pathlib import Path
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,6 +26,16 @@ class Settings(BaseSettings):
 
     # Solo lo usa scripts/migrate_to_postgres.py (no afecta a la app)
     target_database_url: str = ""
+
+    @field_validator("database_url", "target_database_url")
+    @classmethod
+    def usar_driver_psycopg(cls, valor: str) -> str:
+        """Acepta las URLs tal como las copia Neon (postgresql://...)."""
+        valor = valor.strip()
+        for prefijo in ("postgres://", "postgresql://"):
+            if valor.startswith(prefijo):
+                return "postgresql+psycopg://" + valor[len(prefijo):]
+        return valor
 
     smtp_host: str = ""
     smtp_port: int = 587

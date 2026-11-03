@@ -80,8 +80,8 @@ La landing vive en GitHub Pages; la API y el panel en Render; la base de datos e
    - Build: `pip install -r requirements.txt`
    - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
    - Health Check: `/api/v1/health`
-   - Variables: `DATABASE_URL`, `SECRET_KEY`, `COOKIE_SECURE=true`,
-     `ADMIN_EMAIL`, `ADMIN_PASSWORD` y
+   - Variables: `DATABASE_URL` (la URL de Neon; la app acepta `postgresql://...`),
+     `SECRET_KEY`, `COOKIE_SECURE=true`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y
      `ALLOWED_ORIGINS=https://TU-USUARIO.github.io`
 
    También puedes usar el `render.yaml` de la raíz del repositorio (Blueprint).

@@ -35,6 +35,8 @@ def test_landing_public(client):
     data = client.get(f"{API}/public/landing").json()
     assert len(data["projects"]) == 3
     assert data["skillGroups"][0]["name"] == "Frontend"
+    assert data["about"]["contentColumns"] == 1
+    assert data["projects"][0]["descriptionColumns"] == 1
 
 
 def test_admin_requires_session(client):
@@ -85,3 +87,40 @@ def test_upload(client):
     assert r.status_code == 201 and r.json()["url"].endswith(".webp")
     r = client.post(f"{API}/admin/upload", files={"file": ("a.txt", b"no soy imagen", "text/plain")})
     assert r.status_code == 400
+
+
+def test_settings_about_and_lists_still_work(client):
+    """Regresión REST tras extraer la lógica a app/content_service.py."""
+
+    login(client)
+
+    r = client.put(f"{API}/admin/settings", json={"seo_title": "Ian | REST"})
+    assert r.status_code == 200
+    assert r.json()["seo_title"] == "Ian | REST"
+    assert r.json()["meta_description"].startswith("Portafolio")  # merge parcial
+
+    r = client.put(
+        f"{API}/admin/about",
+        json={
+            "paragraphs": ["  Uno  ", "", "Dos"],
+            "content_html": "<p onclick='x()'>Hola</p><script>alert(1)</script>",
+            "content_columns": 3,
+            "content_align": "justify",
+            "photo_alt": "Ian",
+        },
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["paragraphs"] == ["Uno", "Dos"]
+    assert "<script" not in body["content_html"] and "onclick" not in body["content_html"]
+    assert body["content_columns"] == 3 and body["content_align"] == "justify"
+
+    r = client.put(
+        f"{API}/admin/social-links",
+        json={"links": [{"platform": "github", "url": "https://github.com/ian", "visible": True}]},
+    )
+    assert r.status_code == 200
+    assert [link["platform"] for link in r.json()["links"]] == ["github"]
+
+    body = {"groups": [{"name": "Único", "skills": ["Python"]}]}
+    assert client.put(f"{API}/admin/skills", json=body).json() == body

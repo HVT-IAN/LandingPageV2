@@ -20,8 +20,14 @@ SETTINGS = dict(
     contact_email="tu-correo@ejemplo.com",  # CAMBIAR por tu correo real
 )
 
-ABOUT = dict(paragraphs=["Soy Ian, desarrollador frontend.", "Me gusta el 3D y el motion en la web."],
-             photo_url="", photo_alt="Ian Oscani")
+ABOUT = dict(
+    paragraphs=["Soy Ian, desarrollador frontend.", "Me gusta el 3D y el motion en la web."],
+    content_html="<p>Soy Ian, desarrollador frontend.</p><p>Me gusta el 3D y el motion en la web.</p>",
+    content_columns=1,
+    content_align="left",
+    photo_url="",
+    photo_alt="Ian Oscani",
+)
 
 # Reemplaza estos 3 proyectos por los reales de tu HTML
 PROJECTS = [

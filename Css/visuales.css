@@ -270,29 +270,111 @@
     text-decoration: underline;
 }
 
-/* --- Seccion Contacto (centrado vertical via flex de la seccion) --- */
+/* --- Seccion Contacto: leyenda y redes | formulario --- */
 .contenedorContacto {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-areas:
+        "intro formulario"
+        "redes formulario";
+    grid-template-rows: auto 1fr;
+    align-items: start;
+    row-gap: 30px;
+    column-gap: clamp(48px, 7vw, 110px);
+    width: min(1080px, 100%);
+    margin-inline: auto;
+    text-align: left;
 }
 
-.contenedorContacto .fuenteSecundaria {
+.contactoIntro {
+    grid-area: intro;
+    max-width: 440px;
+}
+
+.contactoIntro .fuenteSecundaria {
     font-family: "Poppins", sans-serif;
-    font-size: clamp(26px, 4vw, 40px);
+    font-size: clamp(30px, 4vw, 44px);
     font-weight: 600;
+    line-height: 1.12;
     color: var(--texto);
     margin: 0;
 }
 
+.contactoIntro .SeccionInformacion {
+    max-width: 390px;
+    margin: 16px 0 0;
+    font-weight: 300;
+    line-height: 1.7;
+    color: rgba(23, 23, 23, 0.8);
+}
+
+.formularioContacto {
+    grid-area: formulario;
+    align-self: center;
+    justify-self: end;
+    width: 100%;
+    max-width: 540px;
+}
+
 .grupoContacto {
+    grid-area: redes;
+    align-self: start;
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    width: min(360px, 100%);
+}
+
+.grupoContacto .botonCTA {
+    width: 100%;
+    justify-content: flex-start;
+    padding: 12px 2px;
+    border-bottom: 1px solid var(--linea);
+    font-size: 14px;
+}
+
+.grupoContacto .botonCTA:last-child {
+    border-bottom-color: transparent;
+}
+
+.grupoContacto .iconoRed {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 900px) {
+    .contenedorContacto {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "intro"
+            "formulario"
+            "redes";
+        grid-template-rows: auto auto auto;
+        row-gap: 24px;
+        width: min(560px, 100%);
+    }
+
+    /* En una columna el titulo fantasma queda justo debajo del contenido,
+       sin cruzarse con las redes. En movil lo ajusta querysMovil.css. */
+    .tituloFantasma--contacto {
+        bottom: calc(var(--margen) + 8px);
+        font-size: 40px;
+    }
+
+    .contactoIntro {
+        max-width: none;
+    }
+
+    .formularioContacto {
+        justify-self: stretch;
+        max-width: none;
+    }
+
+    .grupoContacto {
+        align-self: start;
+        width: 100%;
+    }
 }
 
 /* --- Rejilla de puntos pulsantes de fondo --- */

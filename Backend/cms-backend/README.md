@@ -14,6 +14,7 @@ uvicorn app.main:app --reload
 ```
 
 - Documentación interactiva: http://localhost:8000/docs
+- API GraphQL + GraphiQL (desarrollo): http://localhost:8000/graphql
 - Pruebas: `pytest`
 
 ## Endpoints (prefijo `/api/v1`)
@@ -38,6 +39,36 @@ uvicorn app.main:app --reload
 
 Errores: 400 datos inválidos · 401 sin sesión · 404 no existe · 409 slug duplicado · 413 archivo grande · 429 límite.
 
+## API GraphQL (sección DeepSeek / Misión A)
+
+`POST /graphql` es la API que consumirá el panel nuevo. REST sigue vivo como compatibilidad
+(la landing lo usa hasta que exista una tarea explícita de migración).
+
+- Librería: **Strawberry**; sesión por la misma cookie `cms_session` (sin bearer tokens).
+- Errores en `extensions.code`: `BAD_USER_INPUT`, `UNAUTHENTICATED`, `NOT_FOUND`, `CONFLICT`,
+  `PAYLOAD_TOO_LARGE`, `TOO_MANY_REQUESTS` (mensajes en español).
+- Upload por el multipart spec de GraphQL: `uploadImage(file: Upload!)`.
+- GraphiQL solo si `ENVIRONMENT` es distinto de `production`.
+- Lógica compartida con REST en `app/content_service.py`: no hay reglas duplicadas.
+- SDL versionada: [`docs/graphql/schema.graphql`](../../docs/graphql/schema.graphql).
+  Guía y ejemplos: [`docs/graphql/README.md`](../../docs/graphql/README.md).
+
+| REST | GraphQL |
+|---|---|
+| `GET /health` | `{ health { status } }` |
+| `GET /public/landing` | `{ publicLanding { … } }` |
+| `POST /public/contact` | `mutation { submitContact(input: …) { ok } }` |
+| `POST /auth/login` · `/auth/logout` · `GET /auth/me` | `login(...)` · `logout` · `{ me { id email } }` |
+| `GET/PUT /admin/settings` | `{ settings }` · `updateSettings(input)` |
+| `GET/PUT /admin/about` | `{ about }` · `updateAbout(input)` |
+| `GET/POST /admin/projects`, `PATCH/DELETE /admin/projects/{id}` | `{ projects }` · `createProject` · `updateProject` · `deleteProject` |
+| `PUT /admin/projects/order` | `reorderProjects(ids)` |
+| `GET/PUT /admin/skills` | `{ skills }` · `replaceSkills(groups)` |
+| `GET/PUT /admin/social-links` | `{ socialLinks }` · `replaceSocialLinks(links)` |
+| `POST /admin/upload` | `uploadImage(file)` |
+| `GET /admin/messages` | `{ messages(unreadOnly, page, pageSize) { items total page pageSize } }` |
+| `PATCH /admin/messages/{id}/read` · `DELETE /admin/messages/{id}` | `markMessageRead(id)` · `deleteMessage(id)` |
+
 ## Estructura
 
 ```
@@ -49,9 +80,12 @@ app/
   security.py    argon2 + JWT
   deps.py        dependencia de sesión
   services.py    límite de envíos y correo
+  sanitize.py    limpieza del HTML del editor enriquecido
+  content_service.py  lógica de negocio compartida por REST y GraphQL
+  graphql/       schema.py · query.py · mutation.py · types.py · inputs.py · context.py · errors.py
   seed.py        contenido inicial
   routers/       public.py · auth.py · admin.py
-tests/test_api.py
+tests/         test_api.py · test_graphql.py · test_sanitize.py
 ```
 
 ## Producción (un solo servidor)
@@ -81,7 +115,8 @@ La landing vive en GitHub Pages; la API y el panel en Render; la base de datos e
    - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
    - Health Check: `/api/v1/health`
    - Variables: `DATABASE_URL` (la URL de Neon; la app acepta `postgresql://...`),
-     `SECRET_KEY`, `COOKIE_SECURE=true`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y
+     `SECRET_KEY`, `COOKIE_SECURE=true`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`,
+     `ENVIRONMENT=production` (desactiva GraphiQL) y
      `ALLOWED_ORIGINS=https://TU-USUARIO.github.io`
 
    También puedes usar el `render.yaml` de la raíz del repositorio (Blueprint).
@@ -95,12 +130,27 @@ La landing vive en GitHub Pages; la API y el panel en Render; la base de datos e
 
 ## Integración con la landing
 
-En `script.js`: `fetch("/api/v1/public/landing")`, renderiza con `textContent` (no `innerHTML`),
-y conserva el HTML actual como respaldo si la petición falla. Formulario de contacto:
+En `script.js`: `fetch("/api/v1/public/landing")` y conserva el HTML actual como respaldo si la
+petición falla. Los campos de proyectos y Sobre mí usan HTML sanitizado con `nh3` y se pintan
+con `innerHTML`; el resto de textos sigue usando `textContent`. Formulario de contacto:
 `POST /api/v1/public/contact` con `{name, email, message, website: ""}` (campo `website` oculto).
 
 ## Pendiente / no incluido
 
 - Panel admin en React (esta entrega es solo el backend).
 - Cambio de contraseña: se hace por script o directamente en la base.
-- Migraciones (Alembic): `create_all` basta para empezar.
+- Migraciones: las columnas aditivas del editor enriquecido se aplican solas al arrancar; no se usa Alembic.
+
+## Migración del editor enriquecido
+
+La app agrega de forma automática las columnas nuevas de `projects` y `about` al arrancar,
+sin borrar contenido. Para aplicarlas manualmente (por ejemplo, antes de desplegar a Neon):
+
+```bash
+python scripts/migrate_rich_text.py
+# o contra otra base:
+python scripts/migrate_rich_text.py --database-url "postgresql://..."
+```
+
+La migración es idempotente. En Sobre mí convierte los párrafos existentes a `content_html`
+solo si ese campo está vacío.

@@ -147,9 +147,50 @@
         margin-top: 10px;
     }
 
-    /* Contacto */
-    .contenedorContacto .fuenteSecundaria {
-        font-size: 22px;
+    /* Contacto: una sola columna con el formulario antes de las redes */
+    .contenedorContacto {
+        row-gap: 18px;
+    }
+
+    .contactoIntro .fuenteSecundaria {
+        font-size: 24px;
+        line-height: 1.15;
+    }
+
+    .contactoIntro .SeccionInformacion {
+        max-width: none;
+        margin-top: 8px;
+    }
+
+    .formularioContacto {
+        gap: 14px;
+        padding: 18px;
+        box-shadow: 6px 6px 0 rgba(23, 23, 23, 0.04);
+    }
+
+    .formularioContacto label {
+        font-size: 9px;
+    }
+
+    /* 16px evita que iOS haga zoom al enfocar un campo */
+    .formularioContacto .campo input,
+    .formularioContacto .campo textarea {
+        padding: 6px 0 8px;
+        font-size: 16px;
+    }
+
+    .formularioContacto .campo textarea {
+        min-height: 90px;
+    }
+
+    .formularioContacto .botonCTA {
+        margin-top: 2px;
+        padding: 12px 18px;
+    }
+
+    .grupoContacto .botonCTA {
+        padding: 10px 2px;
+        font-size: 13px;
     }
 
     /* Marco mas delgado */
@@ -209,5 +250,61 @@
         grid-template-columns: repeat(16, 1fr);
         gap: 14px;
         padding: 20px;
+    }
+}
+
+/* Movil/tablet con poca altura: el formulario necesita mas espacio del que
+   deja una pantalla corta. Compactamos el bloque y retiramos el titulo
+   fantasma para que no se cruce con las redes ni se salga de la seccion. */
+@media (max-width: 900px) and (max-height: 760px) {
+    #panel-contacto {
+        justify-content: center;
+        padding-top: 56px;
+        padding-bottom: 20px;
+    }
+
+    .tituloFantasma--contacto {
+        display: none;
+    }
+
+    .contenedorContacto {
+        row-gap: 12px;
+    }
+
+    .contactoIntro .fuenteSecundaria {
+        font-size: 22px;
+    }
+
+    .contactoIntro .SeccionInformacion {
+        margin-top: 4px;
+    }
+
+    .formularioContacto {
+        gap: 10px;
+        padding: 14px;
+    }
+
+    .formularioContacto .campo {
+        gap: 4px;
+    }
+
+    .formularioContacto .campo input,
+    .formularioContacto .campo textarea {
+        padding-top: 4px;
+        padding-bottom: 6px;
+    }
+
+    .formularioContacto .campo textarea {
+        min-height: 74px;
+    }
+
+    .formularioContacto .botonCTA {
+        margin-top: 0;
+        padding: 10px 14px;
+    }
+
+    .grupoContacto .botonCTA {
+        padding: 6px 2px;
+        font-size: 12px;
     }
 }

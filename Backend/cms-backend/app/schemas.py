@@ -49,6 +49,9 @@ class SettingsData(BaseModel):
 # ---------- Sobre mí ----------
 class AboutData(BaseModel):
     paragraphs: list[str] = []
+    content_html: str = ""
+    content_columns: int = 1
+    content_align: str = "left"
     photo_url: str = ""
     photo_alt: str = ""
     model_config = {"from_attributes": True}
@@ -60,6 +63,8 @@ class ProjectBase(BaseModel):
     date_label: str = ""
     role: str = ""
     description: str = ""
+    description_columns: int = 1
+    description_align: str = "left"
     image_url: str = ""
     image_alt: str = ""
     repo_url: str = ""
@@ -79,6 +84,8 @@ class ProjectUpdate(BaseModel):
     date_label: str | None = None
     role: str | None = None
     description: str | None = None
+    description_columns: int | None = None
+    description_align: str | None = None
     image_url: str | None = None
     image_alt: str | None = None
     repo_url: str | None = None

@@ -312,6 +312,254 @@ body.enCima .logoFijo {
     padding: 0;
 }
 
+/* --- Contenido enriquecido (proyectos y Sobre mí) --- */
+.textoEnriquecido {
+    color: var(--texto);
+    font-family: "Montserrat", sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.textoEnriquecido[data-alineacion="justify"] {
+    text-align: justify;
+}
+
+.textoEnriquecido[data-columnas="2"] {
+    column-count: 2;
+    column-gap: clamp(24px, 4vw, 48px);
+    column-rule: 1px solid var(--linea);
+}
+
+.textoEnriquecido[data-columnas="3"] {
+    column-count: 3;
+    column-gap: clamp(20px, 3vw, 36px);
+    column-rule: 1px solid var(--linea);
+}
+
+.textoEnriquecido > :first-child {
+    margin-top: 0;
+}
+
+.textoEnriquecido > :last-child {
+    margin-bottom: 0;
+}
+
+.textoEnriquecido p {
+    margin: 0 0 0.9em;
+}
+
+.textoEnriquecido h1,
+.textoEnriquecido h2,
+.textoEnriquecido h3,
+.textoEnriquecido h4,
+.textoEnriquecido h5,
+.textoEnriquecido h6 {
+    margin: 1.2em 0 0.5em;
+    font-family: "Poppins", sans-serif;
+    font-weight: 600;
+    line-height: 1.2;
+    break-after: avoid-column;
+}
+
+.textoEnriquecido h1 {
+    font-size: 28px;
+}
+
+.textoEnriquecido h2 {
+    font-size: 24px;
+}
+
+.textoEnriquecido h3 {
+    font-size: 20px;
+}
+
+.textoEnriquecido h4,
+.textoEnriquecido h5,
+.textoEnriquecido h6 {
+    font-size: 17px;
+}
+
+.textoEnriquecido ul,
+.textoEnriquecido ol {
+    margin: 0 0 1em;
+    padding-left: 1.4em;
+}
+
+.textoEnriquecido li + li {
+    margin-top: 0.35em;
+}
+
+.textoEnriquecido blockquote {
+    margin: 1.2em 0;
+    padding: 0.2em 0 0.2em 1.1em;
+    border-left: 2px solid var(--texto);
+    color: var(--textoTenue);
+}
+
+.textoEnriquecido a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.textoEnriquecido img {
+    max-width: 100%;
+    height: auto;
+}
+
+.textoEnriquecido figure {
+    margin: 1.2em 0;
+    break-inside: avoid-column;
+}
+
+.textoEnriquecido figcaption {
+    margin-top: 6px;
+    font-family: var(--fuenteTecnica);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--textoTenue);
+}
+
+.textoEnriquecido table {
+    width: 100%;
+    margin: 1.2em 0;
+    border-collapse: collapse;
+    font-size: 13px;
+    break-inside: avoid-column;
+}
+
+.textoEnriquecido th,
+.textoEnriquecido td {
+    padding: 7px 9px;
+    border: 1px solid var(--linea);
+    text-align: left;
+    vertical-align: top;
+}
+
+.textoEnriquecido th {
+    font-weight: 500;
+    background-color: rgba(23, 23, 23, 0.04);
+}
+
+.textoEnriquecido hr {
+    margin: 1.4em 0;
+    border: 0;
+    border-top: 1px solid var(--linea);
+}
+
+@media (max-width: 900px) {
+    .textoEnriquecido[data-columnas="2"],
+    .textoEnriquecido[data-columnas="3"] {
+        column-count: 1;
+        column-rule: 0;
+    }
+}
+
+/* --- Formulario de contacto ---
+   Panel translucido para separar los campos de la figura 3D y mantener
+   el lenguaje de lineas finas del resto de la pagina. */
+.formularioContacto {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: clamp(22px, 3vw, 30px);
+    border: 1px solid var(--linea);
+    background-color: rgba(255, 255, 255, 0.94);
+    box-shadow: 12px 12px 0 rgba(23, 23, 23, 0.04);
+}
+
+.formularioContacto::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    width: 64px;
+    height: 2px;
+    background-color: var(--texto);
+}
+
+.formularioContacto .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.formularioContacto label {
+    font-family: var(--fuenteTecnica);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--textoTenue);
+    transition: color 0.2s ease;
+}
+
+.formularioContacto .campo:focus-within label {
+    color: var(--texto);
+}
+
+.formularioContacto .campo input,
+.formularioContacto .campo textarea {
+    width: 100%;
+    padding: 8px 0 10px;
+    border: 0;
+    border-bottom: 1px solid var(--linea);
+    border-radius: 0;
+    background-color: transparent;
+    color: var(--texto);
+    font-family: "Montserrat", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.formularioContacto .campo textarea {
+    min-height: 112px;
+    resize: vertical;
+}
+
+.formularioContacto .campo input:focus,
+.formularioContacto .campo textarea:focus {
+    outline: none;
+    border-bottom-color: var(--texto);
+    box-shadow: 0 1px 0 var(--texto);
+}
+
+.formularioContacto .campo input:user-invalid,
+.formularioContacto .campo textarea:user-invalid {
+    border-bottom-color: #8a1f1f;
+    box-shadow: 0 1px 0 #8a1f1f;
+}
+
+.formularioContacto .botonCTA {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+    padding: 14px 20px;
+    border: 1px solid var(--texto);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.formularioContacto .botonCTA:hover:not(:disabled) {
+    border-color: transparent;
+}
+
+.formularioContacto .botonCTA:focus-visible {
+    outline: 2px solid var(--texto);
+    outline-offset: 3px;
+}
+
+.formularioContacto .botonCTA:disabled {
+    opacity: 0.55;
+    cursor: wait;
+    mix-blend-mode: normal;
+}
+
 /* --- Titulos fantasma ---
    Viven DENTRO de su seccion (position absolute): viajan con el scroll,
    nunca invaden el contenido de otra seccion y no dependen de JS. Van en

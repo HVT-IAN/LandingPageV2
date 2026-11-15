@@ -162,7 +162,9 @@ function mostrarProyecto(boton) {
   if (detalleTitulo) detalleTitulo.textContent = titulo;
   if (detalleFecha) detalleFecha.textContent = fecha ? fecha.textContent.trim() : "";
   if (detalleDescripcion) {
-    detalleDescripcion.textContent = descripcion ? descripcion.textContent.trim() : "";
+    detalleDescripcion.innerHTML = descripcion ? descripcion.innerHTML : "";
+    detalleDescripcion.dataset.columnas = descripcion?.dataset.columnas || "1";
+    detalleDescripcion.dataset.alineacion = descripcion?.dataset.alineacion || "left";
   }
 
   if (detalleTags && bloque) {
@@ -250,7 +252,7 @@ const contactText = document.querySelector("#panel-contacto p.SeccionInformacion
 
 // ===== Caché local y pantalla de carga =====
 const CACHE_KEY = "actmijangos:landing:v1";
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 
 const pantallaCarga = document.getElementById("pantallaCarga");
 const pantallaCargaTexto = document.getElementById("pantallaCargaTexto");
@@ -511,7 +513,11 @@ function iniciarLanding() {
 function limpiarDetalleProyecto() {
   if (detalleTitulo) detalleTitulo.textContent = "";
   if (detalleFecha) detalleFecha.textContent = "";
-  if (detalleDescripcion) detalleDescripcion.textContent = "";
+  if (detalleDescripcion) {
+    detalleDescripcion.textContent = "";
+    detalleDescripcion.dataset.columnas = "1";
+    detalleDescripcion.dataset.alineacion = "left";
+  }
   if (detalleTags) detalleTags.textContent = "";
   if (detalleImagen) {
     detalleImagen.removeAttribute("src");
@@ -572,9 +578,11 @@ function pintarProyectos(proyectos) {
     if (proyecto?.role) partesFecha.push("Rol: " + proyecto.role);
     fecha.textContent = partesFecha.join(" · ");
 
-    const desc = document.createElement("p");
-    desc.className = "descripcionBoton";
-    desc.textContent = proyecto?.description || "";
+    const desc = document.createElement("div");
+    desc.className = "descripcionBoton textoEnriquecido";
+    desc.innerHTML = String(proyecto?.description || "");
+    desc.dataset.columnas = proyecto?.descriptionColumns === 2 ? "2" : "1";
+    desc.dataset.alineacion = proyecto?.descriptionAlign === "justify" ? "justify" : "left";
 
     const tagsUl = document.createElement("ul");
     tagsUl.className = "tagsProyecto";
@@ -671,18 +679,32 @@ function pintarAbout(about) {
   const foto = document.getElementById("about-foto");
 
   if (contenedor) {
-    const parrafos = (Array.isArray(about?.paragraphs) ? about.paragraphs : [])
-      .map((texto) => String(texto || "").trim())
-      .filter(Boolean);
+    const contentHtml = String(about?.contentHtml || "").trim();
+    const columnas = about?.contentColumns === 3 ? "3"
+      : about?.contentColumns === 2 ? "2" : "1";
+    const alineacion = about?.contentAlign === "justify" ? "justify" : "left";
 
+    contenedor.classList.add("textoEnriquecido");
+    contenedor.dataset.columnas = columnas;
+    contenedor.dataset.alineacion = alineacion;
     contenedor.textContent = "";
-    parrafos.forEach((texto) => {
-      const p = document.createElement("p");
-      p.className = "SeccionInformacion";
-      p.textContent = texto;
-      contenedor.appendChild(p);
-    });
-    contenedor.hidden = parrafos.length === 0;
+
+    if (contentHtml) {
+      contenedor.innerHTML = contentHtml;
+      contenedor.hidden = false;
+    } else {
+      const parrafos = (Array.isArray(about?.paragraphs) ? about.paragraphs : [])
+        .map((texto) => String(texto || "").trim())
+        .filter(Boolean);
+
+      parrafos.forEach((texto) => {
+        const p = document.createElement("p");
+        p.className = "SeccionInformacion";
+        p.textContent = texto;
+        contenedor.appendChild(p);
+      });
+      contenedor.hidden = parrafos.length === 0;
+    }
   }
 
   if (foto) {

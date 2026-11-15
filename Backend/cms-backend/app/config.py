@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    environment: str = "development"
     database_url: str = "sqlite:///./cms.db"
     secret_key: str = "dev-secret-change-me"
     cookie_secure: bool = False

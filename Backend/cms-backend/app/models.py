@@ -48,6 +48,9 @@ class About(Base):
     __tablename__ = "about"
     id: Mapped[int] = mapped_column(primary_key=True)
     paragraphs: Mapped[list] = mapped_column(JSON, default=list)
+    content_html: Mapped[str] = mapped_column(Text, default="")
+    content_columns: Mapped[int] = mapped_column(Integer, default=1)
+    content_align: Mapped[str] = mapped_column(String(20), default="left")
     photo_url: Mapped[str] = mapped_column(String(500), default="")
     photo_alt: Mapped[str] = mapped_column(String(200), default="")
 
@@ -60,6 +63,8 @@ class Project(Base):
     date_label: Mapped[str] = mapped_column(String(60), default="")
     role: Mapped[str] = mapped_column(String(120), default="")
     description: Mapped[str] = mapped_column(Text, default="")
+    description_columns: Mapped[int] = mapped_column(Integer, default=1)
+    description_align: Mapped[str] = mapped_column(String(20), default="left")
     image_url: Mapped[str] = mapped_column(String(500), default="")
     image_alt: Mapped[str] = mapped_column(String(200), default="")
     repo_url: Mapped[str] = mapped_column(String(500), default="")

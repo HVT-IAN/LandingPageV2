@@ -8,6 +8,10 @@ Backend/cms-backend/__pycache__/
 Backend/cms-backend/**/__pycache__/
 Backend/cms-backend/.pytest_cache/
 
+# Panel de administración (el build en admin-dist/ sí se versiona)
+Backend/cms-backend/admin-front/node_modules/
+Backend/cms-backend/admin-front/.vite/
+
 # Python
 __pycache__/
 *.pyc

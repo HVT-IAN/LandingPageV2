@@ -1,0 +1,265 @@
+type About {
+  paragraphs: [String!]!
+  contentHtml: String!
+  contentColumns: Int!
+  contentAlign: String!
+  photoUrl: String!
+  photoAlt: String!
+}
+
+input AboutInput {
+  paragraphs: [String!]! = []
+  contentHtml: String! = ""
+  contentColumns: Int! = 1
+  contentAlign: String! = "left"
+  photoUrl: String! = ""
+  photoAlt: String! = ""
+}
+
+input ContactInput {
+  name: String!
+  email: String!
+  message: String!
+  website: String! = ""
+}
+
+type ContactResult {
+  ok: Boolean!
+}
+
+type Health {
+  status: String!
+}
+
+type Landing {
+  settings: SiteSettings
+  about: LandingAbout!
+  projects: [LandingProject!]!
+  skillGroups: [SkillGroup!]!
+  socialLinks: [LandingSocialLink!]!
+}
+
+type LandingAbout {
+  paragraphs: [String!]!
+  contentHtml: String!
+  contentColumns: Int!
+  contentAlign: String!
+  photo: Photo!
+}
+
+type LandingProject {
+  slug: String!
+  title: String!
+  dateLabel: String!
+  role: String!
+  description: String!
+  descriptionColumns: Int!
+  descriptionAlign: String!
+  image: Photo!
+  repoUrl: String!
+  demoUrl: String!
+  tags: [String!]!
+  featured: Boolean!
+}
+
+type LandingSocialLink {
+  platform: String!
+  url: String!
+}
+
+type Message {
+  id: Int!
+  name: String!
+  email: String!
+  message: String!
+  read: Boolean!
+  createdAt: String!
+}
+
+type MessagePage {
+  items: [Message!]!
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+type Mutation {
+  """Inicia sesión y guarda la cookie cms_session."""
+  login(email: String!, password: String!): User!
+
+  """Borra la cookie de sesión."""
+  logout: Boolean!
+  updateSettings(input: SettingsInput!): SiteSettings!
+  updateAbout(input: AboutInput!): About!
+  createProject(input: ProjectCreateInput!): Project!
+  updateProject(id: Int!, input: ProjectUpdateInput!): Project!
+  deleteProject(id: Int!): Boolean!
+
+  """Reordena; la lista debe contener todos los ids."""
+  reorderProjects(ids: [Int!]!): [Project!]!
+  replaceSkills(groups: [SkillGroupInput!]!): Skills!
+  replaceSocialLinks(links: [SocialLinkInput!]!): [SocialLink!]!
+  markMessageRead(id: Int!): Boolean!
+  deleteMessage(id: Int!): Boolean!
+
+  """Sube JPG/PNG/WebP (máx. 5 MB) y devuelve la URL en WebP."""
+  uploadImage(file: Upload!): UploadResult!
+
+  """Formulario público (honeypot y límite de 3/hora por IP)."""
+  submitContact(input: ContactInput!): ContactResult!
+}
+
+type Photo {
+  url: String!
+  alt: String!
+}
+
+type Project {
+  id: Int!
+  slug: String!
+  title: String!
+  dateLabel: String!
+  role: String!
+  description: String!
+  descriptionColumns: Int!
+  descriptionAlign: String!
+  imageUrl: String!
+  imageAlt: String!
+  repoUrl: String!
+  demoUrl: String!
+  tags: [String!]!
+  featured: Boolean!
+  published: Boolean!
+  position: Int!
+}
+
+input ProjectCreateInput {
+  slug: String!
+  title: String!
+  dateLabel: String! = ""
+  role: String! = ""
+  description: String! = ""
+  descriptionColumns: Int! = 1
+  descriptionAlign: String! = "left"
+  imageUrl: String! = ""
+  imageAlt: String! = ""
+  repoUrl: String! = ""
+  demoUrl: String! = ""
+  tags: [String!]! = []
+  featured: Boolean! = false
+  published: Boolean! = true
+}
+
+input ProjectUpdateInput {
+  slug: String
+  title: String
+  dateLabel: String
+  role: String
+  description: String
+  descriptionColumns: Int
+  descriptionAlign: String
+  imageUrl: String
+  imageAlt: String
+  repoUrl: String
+  demoUrl: String
+  tags: [String!]
+  featured: Boolean
+  published: Boolean
+}
+
+type Query {
+  """Estado del servicio. Ruta permanente usada por Render."""
+  health: Health!
+
+  """Contenido público de la landing (equivalente a GET /public/landing)."""
+  publicLanding: Landing!
+
+  """Usuario de la sesión actual. Requiere cookie cms_session."""
+  me: User!
+  settings: SiteSettings!
+  about: About!
+  projects: [Project!]!
+  skills: Skills!
+  socialLinks: [SocialLink!]!
+
+  """Mensajes paginados, más recientes primero."""
+  messages(unreadOnly: Boolean! = false, page: Int! = 1, pageSize: Int! = 20): MessagePage!
+}
+
+input SettingsInput {
+  seoTitle: String
+  metaDescription: String
+  logoUrl: String
+  faviconUrl: String
+  latitude: String
+  longitude: String
+  frameText: String
+  availability: String
+  heroTitle: String
+  heroSubtitle: String
+  heroHook: String
+  ctaPrimary: String
+  ctaSecondary: String
+  contactTitle: String
+  contactText: String
+  contactEmail: String
+}
+
+type SiteSettings {
+  seoTitle: String!
+  metaDescription: String!
+  logoUrl: String!
+  faviconUrl: String!
+  latitude: String!
+  longitude: String!
+  frameText: String!
+  availability: String!
+  heroTitle: String!
+  heroSubtitle: String!
+  heroHook: String!
+  ctaPrimary: String!
+  ctaSecondary: String!
+  contactTitle: String!
+  contactText: String!
+  contactEmail: String!
+}
+
+type SkillGroup {
+  name: String!
+  skills: [String!]!
+}
+
+input SkillGroupInput {
+  name: String!
+  skills: [String!]! = []
+}
+
+type Skills {
+  groups: [SkillGroup!]!
+}
+
+type SocialLink {
+  platform: String!
+  url: String!
+  visible: Boolean!
+}
+
+input SocialLinkInput {
+  platform: String!
+  url: String!
+  visible: Boolean! = true
+}
+
+"""Represents a file upload."""
+scalar Upload
+
+type UploadResult {
+  url: String!
+  width: Int!
+  height: Int!
+}
+
+type User {
+  id: Int!
+  email: String!
+}

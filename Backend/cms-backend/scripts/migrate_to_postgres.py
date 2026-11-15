@@ -29,6 +29,7 @@ sys.path.insert(0, str(BASE_DIR))
 
 from app.config import settings  # noqa: E402
 from app.database import Base  # noqa: E402
+from app.migrations import ensure_rich_text_schema  # noqa: E402
 from app.models import (  # noqa: E402
     About,
     Message,
@@ -109,8 +110,9 @@ def main() -> int:
             print("Dry-run: no se escribió nada.")
             return 0
 
-        # Crea las tablas en el destino si no existen.
+        # Crea las tablas en el destino si no existen y agrega columnas nuevas.
         Base.metadata.create_all(target_engine)
+        ensure_rich_text_schema(target_engine)
 
         with Session(target_engine) as dst:
             # Vaciamos el destino en orden inverso (hijos primero).
